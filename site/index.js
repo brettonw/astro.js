@@ -234,8 +234,8 @@ let buildScene = function () {
         let sunDirection = Float3.normalize ([-X, Z, Y]);
         let sunPosition = Float4.scale (sunDirection, sunDrawDistance);
         // compute the position of the sun, and update the lighting conversation
-        node.transform = Float4x4.multiply (Float4x4.scale (sunScale), Float4x4.translate (sunPosition)),
-            standardUniforms.LIGHT_DIRECTION = sunDirection;
+        node.transform = Float4x4.multiply (Float4x4.scale (sunScale), Float4x4.translate (sunPosition));
+        standardUniforms.LIGHT_DIRECTION = sunDirection;
     });
 
 
@@ -249,7 +249,7 @@ let buildScene = function () {
     });
     scene.addChild (worldNode);
 
-    let useTest = true;
+    let useTest = false;
 
     let testNode = Node.new ({
         name: "test",
@@ -339,7 +339,7 @@ let buildScene = function () {
         state: function (standardUniforms) {
             context.enable (context.DEPTH_TEST);
             context.depthMask (true);
-            Program.get ("ads").use ();
+            Program.get ("basic-texture").use ();
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
             standardUniforms.TEXTURE_SAMPLER = "moon";
             standardUniforms.MODEL_COLOR = [1.1, 1.1, 1.1];
@@ -356,7 +356,6 @@ let buildScene = function () {
     Thing.new ("moon", "moon", function (time) {
         // get the node
         let node = Node.get (this.node);
-
 
         // https://en.wikipedia.org/wiki/Position_of_the_Sun
         // for J2000...
@@ -382,32 +381,39 @@ let onBodyLoad = function () {
     fovRange = document.getElementById("fovRange");
     framingRange = document.getElementById("framingRange");
 
-    // load the shaders, and build the programs
-    LoaderShader.new ("shaders/@.glsl")
+    // load the basic shaders from the original soure
+    LoaderShader.new ("http://webgl-render.azurewebsites.net/site/shaders/@.glsl")
         .addVertexShaders ("basic")
-        .addFragmentShaders([ "basic", "ads", "overlay", "texture", "color", "earth", "clouds", "atmosphere", "hardlight" ])
+        .addFragmentShaders([ "basic", "basic-texture", "color", "overlay", "texture" ])
         .go (null, OnReady.new (null, function (x) {
             Program.new ("basic");
-            Program.new ("ads", { vertexShader: "basic" });
+            Program.new ("basic-texture", { vertexShader: "basic" });
+            Program.new ("color", { vertexShader: "basic" });
             Program.new ("overlay", { vertexShader: "basic" });
             Program.new ("texture", { vertexShader: "basic" });
-            Program.new ("color", { vertexShader: "basic" });
-            Program.new ("earth", { vertexShader: "basic" });
-            Program.new ("clouds", { vertexShader: "basic" });
-            Program.new ("atmosphere", { vertexShader: "basic" });
-            Program.new ("hardlight", { vertexShader: "basic" });
 
-            // load the textures
-            LoaderPath.new ({ type:Texture, path:"textures/@.png"})
-                .addItems (["clouds", "earth-day", "earth-night", "earth-specular-map", "moon"], { generateMipMap: true })
-                .addItems (["starfield", "constellations"])
+            // load the astro specific shaders, and build the programs
+            LoaderShader.new ("shaders/@.glsl")
+                .addFragmentShaders([ "earth", "clouds", "atmosphere", "hardlight" ])
                 .go (null, OnReady.new (null, function (x) {
-                    LoaderPath.new ({ type:Texture, path:"textures-test/@.png"})
-                        .addItems ("earth-plate-carree")
-                        .go (null, OnReady.new (null, function (x) {
-                            buildScene ();
-                        }));
-                }));
+                    Program.new ("earth", { vertexShader: "basic" });
+                    Program.new ("clouds", { vertexShader: "basic" });
+                    Program.new ("atmosphere", { vertexShader: "basic" });
+                    Program.new ("hardlight", { vertexShader: "basic" });
 
+                    // load the textures
+                    LoaderPath.new ({ type:Texture, path:"textures/@.png"})
+                        .addItems (["clouds", "earth-day", "earth-night", "earth-specular-map", "moon"], { generateMipMap: true })
+                        .addItems (["starfield", "constellations"])
+                        .go (null, OnReady.new (null, function (x) {
+                            LoaderPath.new ({ type:Texture, path:"textures-test/@.png"})
+                                .addItems ("earth-plate-carree")
+                                .go (null, OnReady.new (null, function (x) {
+                                    buildScene ();
+                                }));
+                        }));
+
+                }));
         }));
+
 };
