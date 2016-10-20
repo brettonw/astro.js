@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WebGL</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="icon" type="image/png" href="img/tab-icon.png?v=2" />
+    <link rel="stylesheet" href="index.css" />
+
+    <script type="text/javascript" src="http://webgl-render.azurewebsites.net/site/webgl-debug.js"></script>
+    <script type="text/javascript" src="astro.js"></script>
+    <script type="text/javascript" src="index.js"></script>
+</head>
+<body onload="onBodyLoad ();">
+<div id="title"><span style="margin-top:0px;font-size:24px;">WebGL</span></div>
+<div>
+    <canvas id="render-canvas" style="border:none;margin:0;" width="840px" tabindex="0"></canvas>
+</div>
+<div style="font-size:12px;">
+    <input type="checkbox" id="showConstellationsCheckbox" onchange="draw ([0, 0]);"> Constellations
+    <input type="checkbox" id="showCloudsCheckbox" onchange="draw ([0, 0]);" CHECKED> Clouds
+    <input type="checkbox" id="showAtmosphereCheckbox" onchange="draw ([0, 0]);" CHECKED> Atmosphere
+    <input type="range" id="fovRange" min="0" max="100" step="1" value="50" oninput="draw ([0, 0]);"> FOV
+    <input type="range" id="framingRange" min="0" max="100" step="1" value="50" oninput="draw ([0, 0]);"> Framing
+</div>
+<div id="footer">
+    <a href="../docs" style="float:left;font-size:14px;text-decoration:none;color:white;">docs</a>
+    <a href="https://github.com/brettonw/WebGL" style="float:right;font-size:14px;text-decoration:none;color:white;">... on GitHub</a>
+</div>
+<div style="clear:both;margin-top:50px;font-size:12px;color:cornflowerblue;">
+    Credits: <ul>
+    <li><a style="color:lightskyblue;" href="https://svs.gsfc.nasa.gov/3895">star and constellations maps</a>:
+    NASA/Goddard Space Flight Center Scientific Visualization Studio. Constellation figures based
+    on those developed for the IAU by Alan MacRobert of Sky and Telescope magazine (Roger Sinnott
+    and Rick Fienberg).</li>
+    <li><a style="color:lightskyblue;" href="http://laps.noaa.gov/albers/sos/sos.html">moon map</a>: By Jens Meyer</li>
+    <li><a style="color:lightskyblue;" href="http://laps.noaa.gov/albers/sos/sos.html">earth daytime map</a>: Blue Marble</li>
+    </ul>
+</div>
+</body>
+</html>

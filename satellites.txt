@@ -1,0 +1,114 @@
+URL: xrit/(RA)/(Satellite ID)/(Year)/(Month)/(Day)/(UTC)/(Year)_(Month)_(Day)_(UTC)_(Satellite ID 2)_(Channel)_S(Size).jpeg
+Sizes: 1 = small, 2 = medium, 3 = large
+UTC - generally available on the 3h or 6h multiples
+
+* MSG _MSG3_ "Meteosat 2nd Generation (aka SEVIRI)" (000.0E) (infrared channels 4)
+  MET _MET7_ "Meteosat 1st Generation" (000.0E) (infrared channels 2) - seems to be deactivated (or moved)
+* MET _MET7_ "Meteosat VISSR (aka IODC)" (057.0E) (infrared channel 2)
+* GOES _GOES13_ "US GOES East" (075.0W) (infrared channel 2)
+* GOES _GOES15_ "US GOES West" (135.0W) (infrared channel 2)
+  MTSAT _MTSAT1R_ "MTSAT" (140.0E) (infrared channel 4) - seems to be deactivated (or moved)
+* MTSAT (145.0E)
+
+http://www.sat.dundee.ac.uk/abin/geobrowse (appears to be archive)
+http://www.sat.dundee.ac.uk/geobrowse/geobrowse.php
+Meteosat VISSR (IODC) (057.0E)
+Himawari 8 (140.7E)
+
+http://www.sat.dundee.ac.uk/xrit/000.0E/MSG/2016/10/4/2100/2016_10_4_2100_MSG3_2_S2.jpeg
+http://www.sat.dundee.ac.uk/geobrowse/geobrowse.php?sat=0&year=2016&month=10&day=4&slot=2100&ch=4&grid=0&size=2
+
+
+http://www.sat.dundee.ac.uk/xrit/057.0E/MET/2016/10/4/2100/2016_10_4_2100_MET7_2_S2.jpeg
+
+[
+    {
+        "type": "geoDundee",
+        "longitude": 57.0,
+        "limit":
+        {
+           "left": 14,
+           "right": 611,
+           "top": 14,
+           "bottom": 611
+        },
+        "rescale": "ID",
+        "base_url": "057.0E/MET/",
+        "suffix": "_MET7_2_",
+      "Example": "http://www.sat.dundee.ac.uk/xrit/000.0E/MSG/2016/10/4/2100/2016_10_4_2100_MSG3_9_S2.jpeg"
+    },
+    {
+        "type": "geoDundee",
+        "longitude": 0.0,
+        "limit":
+        {
+           "left": 17,
+           "right": 911,
+           "top": 17,
+           "bottom": 911
+        },
+        "rescale": "ID",
+        "base_url": "000.0E/MSG/",
+        "suffix": "_MSG3_9_",
+      "Example": "http://www.sat.dundee.ac.uk/xrit/000.0E/MSG/2016/10/4/2100/2016_10_4_2100_MSG3_9_S2.jpeg"
+    },
+    {
+        "type": "geoDundee",
+        "longitude": -75.0,
+        "limit":
+        {
+           "left": 16,
+           "right": 688,
+           "top": 70,
+        "bottom": 744},
+        "rescale": "ID",
+        "base_url": "075.0W/GOES/",
+        "suffix": "_GOES13_4_",
+      "Example": "http://www.sat.dundee.ac.uk/xrit/075.0W/GOES/2016/10/4/2100/2016_10_4_2100_GOES13_4_S2.jpeg"
+    },
+    {
+        "type": "geoDundee",
+        "longitude": -135.0,
+        "limit":
+        {
+           "left": 17,
+           "right": 688,
+           "top": 70,
+           "bottom": 744
+        },
+        "rescale": "ID",
+        "base_url": "135.0W/GOES/",
+        "suffix": "_GOES15_4_",
+      "Example": "http://www.sat.dundee.ac.uk/xrit/135.0W/GOES/2016/10/4/2100/2016_10_4_2100_GOES15_4_S2.jpeg"
+    },
+    {
+        "type": "__geoJMA",
+        "longitude": 139.5,
+        "limit":
+        {
+            "left": 12,
+            "right": 787,
+            "top": 12,
+            "bottom": 787
+        },
+        "rescale": "ID",
+        "base_url": "",
+        "suffix": "-00",
+      "Example": "http://www.sat.dundee.ac.uk/xrit/000.0E/MSG/2016/10/4/2100/2016_10_4_2100_MSG3_9_S2.jpeg"
+    },
+    {
+        "type": "geoDundee",
+        "longitude": 140.7,
+        "limit":
+        {
+           "left": 18,
+           "right": 1357,
+           "top": 16,
+           "bottom": 1359
+        },
+        "rescale": "ID",
+        "base_url": "140.7E/MTSAT/",
+        "suffix": "_MTSAT3_7_",
+      "Example": "http://www.sat.dundee.ac.uk/xrit/140.7E/MTSAT/2016/10/4/2100/2016_10_4_2100_MTSAT3_7_S2.jpeg"
+    }
+]
