@@ -1,4 +1,4 @@
-# Astro-JS
+# astro.js
  Earth-centric astronomy
 
 Deployed at: http://astro-js.azurewebsites.net/ (though the free Azure website connection is severely constrained 
@@ -12,6 +12,7 @@ This project uses ant for building, with the "dev" target being the default:
     ant | ant dev | ant rel
 
 ### Build Dependencies
+* ant
 * node/npm
 * gcc (for the C-preprocessor)
 * uglifyjs (for Minification)
@@ -29,18 +30,7 @@ For ES6 compatibility, you have to use the "harmony" branch of UglifyJS2:
 YUIDoc only reads the comments, so it doesn't impose any code structure:
  
     npm install -g yuidocjs
-    
-It would be better if I could point it at a single file. Syntax reference at 
-http://yui.github.io/yuidoc/
-.
 
 The theme is "lucid", from https://www.npmjs.com/package/yuidoc-lucid-theme
 
     npm install -g yuidoc-lucid-theme
-    
-I also tried:
-* JSDoc, which wanted very specific code structure, and wouldn't bend to my will, and
-* ESDoc, which crashed on my code.
-
-### Building a scene
-...
