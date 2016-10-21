@@ -382,7 +382,7 @@ let onBodyLoad = function () {
     framingRange = document.getElementById("framingRange");
 
     // load the basic shaders from the original soure
-    LoaderShader.new ("http://webgl-render.azurewebsites.net/site/shaders/@.glsl")
+    LoaderShader.new ("http://webgl-js.azurewebsites.net/site/shaders/@.glsl")
         .addVertexShaders ("basic")
         .addFragmentShaders([ "basic", "basic-texture", "color", "overlay", "texture" ])
         .go (null, OnReady.new (null, function (x) {

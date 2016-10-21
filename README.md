@@ -4,7 +4,7 @@
 Deployed at: http://astro-js.azurewebsites.net/ (though the free Azure website connection is severely constrained 
 and may not serve up the high resolution textures correctly).
 
-<center><img src="http://astro-js.azurewebsites.net/site/img/" alt="Drawing" style="width: 320px;"/></center>
+<center><img src="http://astro-js.azurewebsites.net/site/img/sample.png" alt="Drawing" style="width: 320px;"/></center>
 
 ### Building
 This project uses ant for building, with the "dev" target being the default:
