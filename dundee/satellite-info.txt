@@ -8,7 +8,8 @@ UTC - generally available on the 3h or 6h multiples
 * GOES _GOES13_ "US GOES East" (075.0W) (infrared channel 2)
 * GOES _GOES15_ "US GOES West" (135.0W) (infrared channel 2)
   MTSAT _MTSAT1R_ "MTSAT" (140.0E) (infrared channel 4) - seems to be deactivated (or moved)
-* MTSAT (145.0E)
+  MTSAT (145.0E) (Inactive)
+* MTSAT _MTSAT3_ "Himawari 8" (140.7E)
 
 http://www.sat.dundee.ac.uk/abin/geobrowse (appears to be archive)
 http://www.sat.dundee.ac.uk/geobrowse/geobrowse.php
