@@ -1,5 +1,5 @@
-MSG,3,000.0E,4,Meteosat 2nd Generation (aka SEVIRI)
+MSG,3,000.0E,9,Meteosat 2nd Generation (aka SEVIRI)
 MET,7,057.0E,2,Meteosat VISSR (aka IODC)
-GOES,13,075.0W,2,US GOES East
-GOES,15,135.0W,2,US GOES West
-MTSAT,3,140.7E,7,Himawari 8
+GOES,13,075.0W,4,US GOES East
+GOES,15,135.0W,4,US GOES West
+MTSAT,3,140.7E,13,Himawari 8
