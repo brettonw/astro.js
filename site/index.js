@@ -181,8 +181,6 @@ let buildScene = function () {
     let sunDrawDistance = 200;
     let sunDistance = earthOrbit / earthRadius;
     let sunScale = (sunRadius / earthRadius);
-    let drawScale = sunDrawDistance / sunDistance;
-    sunScale *= drawScale; // approx 0.93
     let sunNode = Node.new ({
         name: "sun",
         transform: Float4x4.identity (),
@@ -200,39 +198,52 @@ let buildScene = function () {
         // get the node
         let node = Node.get (this.node);
 
+        let cos = Utility.cos;
+        let sin = Utility.sin;
+
 
         let n = time;
 
         // compute the mean longitude of the sun, corrected for aberration of light
-        let L = 280.459 + (0.98564736 * n);
+        let jc = time / 36525;
+        //let meanLongitude = 280.459 + (0.98564736 * n);
+        let meanLongitude = 280.460 + (36000.771 * jc);
 
         // compute the mean anomaly of the sun
-        let g = 357.529 + (0.98560028 * n);
+        //let meanAnomaly = 357.529 + (0.98560028 * n);
+        let meanAnomaly = 357.5291092 + (35999.05034 * jc);
 
         // unwind L & g
-        L = Utility.unwindDegrees (L);
-        g - Utility.unwindDegrees (g);
+        meanLongitude = Utility.unwindDegrees (meanLongitude);
+        meanAnomaly = Utility.unwindDegrees (meanAnomaly);
+
 
         // compute the ecliptic longitude of the sun
-        let eclipticLongitude = L + (1.914666471 * Utility.sin (g)) + (0.019994643 * Utility.sin (g + g));
+        let eclipticLongitude = meanLongitude + (1.914666471 * sin (meanAnomaly)) + (0.019994643 * sin (meanAnomaly + meanAnomaly));
         //console.log ("Sun at: " + eclipticLongitude + "°");
 
         // compute the distance to the sun in astronomical units
-        let R = 1.00014 - (0.01671 * Utility.cos (g)) - (0.00014 * Utility.cos (g + g));
+        let R = 1.000140612 - (0.016708617 * cos (meanAnomaly)) - (0.000139589 * cos (meanAnomaly + meanAnomaly));
 
         // compute the ecliptic obliquity
-        let eclipticObliquity = 23.439 - (0.00000036 * n);
+        //let eclipticObliquity = 23.439 - (0.00000036 * n);
+        let eclipticObliquity = 23.439291 - (0.0130042 * jc);
 
-        // compute rectangular equatorial coordinates
+        // compute geocentrics equatorial coordinates
+        let sinEclipticLongitude = sin (eclipticLongitude);
+        let I = R * cos (eclipticLongitude);
+        let J = R * cos (eclipticObliquity) * sinEclipticLongitude;
+        let K = R * sin (eclipticObliquity) * sinEclipticLongitude;
+
         // XXX temporary - I am using a coordinate system where Z goes into the view, and Y is up
         // XXX temporary - I will adjust this later by adding a general rotation at the top of the
         // XXX temporary - view frame
-        let X = R * Utility.cos (eclipticLongitude);
-        let Y = R * Utility.cos (eclipticObliquity) * Utility.sin (eclipticLongitude);
-        let Z = R * Utility.sin (eclipticObliquity) * Utility.sin (eclipticLongitude);
-
-        let sunDirection = Float3.normalize ([-X, Z, Y]);
+        let sunDirection = Float3.normalize ([-I, K, J]);
         let sunPosition = Float4.scale (sunDirection, sunDrawDistance);
+
+        // compute the relative scale of the sun to reflect the changing distance in our orbit
+        sunScale = (sunRadius / earthRadius) * (sunDrawDistance / (sunDistance * R)); // approx 0.93
+
         // compute the position of the sun, and update the lighting conversation
         node.transform = Float4x4.multiply (Float4x4.scale (sunScale), Float4x4.translate (sunPosition));
         standardUniforms.LIGHT_DIRECTION = sunDirection;
