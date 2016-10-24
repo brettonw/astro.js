@@ -201,22 +201,16 @@ let buildScene = function () {
         let cos = Utility.cos;
         let sin = Utility.sin;
 
-
-        let n = time;
-
-        // compute the mean longitude of the sun, corrected for aberration of light
+        // compute the julian century
         let jc = time / 36525;
-        //let meanLongitude = 280.459 + (0.98564736 * n);
-        let meanLongitude = 280.460 + (36000.771 * jc);
 
-        // compute the mean anomaly of the sun
-        //let meanAnomaly = 357.529 + (0.98560028 * n);
+        // compute the mean longitude and mean anomaly of the sun
+        let meanLongitude = 280.460 + (36000.771 * jc);
         let meanAnomaly = 357.5291092 + (35999.05034 * jc);
 
-        // unwind L & g
+        // unwind these values
         meanLongitude = Utility.unwindDegrees (meanLongitude);
         meanAnomaly = Utility.unwindDegrees (meanAnomaly);
-
 
         // compute the ecliptic longitude of the sun
         let eclipticLongitude = meanLongitude + (1.914666471 * sin (meanAnomaly)) + (0.019994643 * sin (meanAnomaly + meanAnomaly));
@@ -226,7 +220,6 @@ let buildScene = function () {
         let R = 1.000140612 - (0.016708617 * cos (meanAnomaly)) - (0.000139589 * cos (meanAnomaly + meanAnomaly));
 
         // compute the ecliptic obliquity
-        //let eclipticObliquity = 23.439 - (0.00000036 * n);
         let eclipticObliquity = 23.439291 - (0.0130042 * jc);
 
         // compute geocentrics equatorial coordinates
@@ -248,7 +241,6 @@ let buildScene = function () {
         node.transform = Float4x4.multiply (Float4x4.scale (sunScale), Float4x4.translate (sunPosition));
         standardUniforms.LIGHT_DIRECTION = sunDirection;
     });
-
 
     let worldNode = Node.new ({
         name: "world",
