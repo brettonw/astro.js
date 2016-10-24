@@ -195,42 +195,68 @@ let buildScene = function () {
     scene.addChild (sunNode);
 
     Thing.new ("sun", "sun", function (time) {
+        /* code from Vallado
+         tut1= ( jd - 2451545.0  )/ 36525.0;
+         fprintf(1,'tut1 %14.9f \n',tut1);
+
+         meanlong= 280.460  + 36000.77*tut1;
+         meanlong= rem( meanlong,360.0  );  %deg
+
+         ttdb= tut1;
+         meananomaly= 357.5277233  + 35999.05034 *ttdb;
+         meananomaly= rem( meananomaly*deg2rad,twopi );  %rad
+         if ( meananomaly < 0.0  )
+         meananomaly= twopi + meananomaly;
+         end
+
+         eclplong= meanlong + 1.914666471 *sin(meananomaly) ...
+         + 0.019994643 *sin(2.0 *meananomaly); %deg
+         eclplong= rem( eclplong,360.0  );  %deg
+
+         obliquity= 23.439291  - 0.0130042 *ttdb;  %deg
+
+         eclplong = eclplong *deg2rad;
+         obliquity= obliquity *deg2rad;
+
+         % --------- find magnitude of sun vector, )   components ------
+         magr= 1.000140612  - 0.016708617 *cos( meananomaly ) ...
+         - 0.000139589 *cos( 2.0 *meananomaly );    % in au's
+
+         rsun(1)= magr*cos( eclplong );
+         rsun(2)= magr*cos(obliquity)*sin(eclplong);
+         rsun(3)= magr*sin(obliquity)*sin(eclplong);
+         */
         // get the node
         let node = Node.get (this.node);
 
+        // cos and sin routines that work on degrees (unwraps intrinsically)
         let cos = Utility.cos;
         let sin = Utility.sin;
 
         // compute the julian century
         let jc = time / 36525;
 
-        // compute the mean longitude and mean anomaly of the sun
-        let meanLongitude = 280.460 + (36000.771 * jc);
-        let meanAnomaly = 357.5291092 + (35999.05034 * jc);
+        // compute the mean longitude and mean anomaly of the sun (degrees)
+        let meanLongitude = 280.460 + (36000.77 * jc);
+        let meanAnomaly = 357.5277233 + (35999.05034 * jc);
 
-        // unwind these values
-        meanLongitude = Utility.unwindDegrees (meanLongitude);
-        meanAnomaly = Utility.unwindDegrees (meanAnomaly);
-
-        // compute the ecliptic longitude of the sun
+        // compute the ecliptic longitude of the sun (degrees)
         let eclipticLongitude = meanLongitude + (1.914666471 * sin (meanAnomaly)) + (0.019994643 * sin (meanAnomaly + meanAnomaly));
-        //console.log ("Sun at: " + eclipticLongitude + "°");
 
         // compute the distance to the sun in astronomical units
         let R = 1.000140612 - (0.016708617 * cos (meanAnomaly)) - (0.000139589 * cos (meanAnomaly + meanAnomaly));
 
-        // compute the ecliptic obliquity
+        // compute the ecliptic obliquity (degrees)
         let eclipticObliquity = 23.439291 - (0.0130042 * jc);
 
-        // compute geocentrics equatorial coordinates
+        // compute geocentric equatorial coordinates
         let sinEclipticLongitude = sin (eclipticLongitude);
         let I = R * cos (eclipticLongitude);
         let J = R * cos (eclipticObliquity) * sinEclipticLongitude;
         let K = R * sin (eclipticObliquity) * sinEclipticLongitude;
 
-        // XXX temporary - I am using a coordinate system where Z goes into the view, and Y is up
-        // XXX temporary - I will adjust this later by adding a general rotation at the top of the
-        // XXX temporary - view frame
+        // I am using a right handed coordinate system where X is positive to the left, Y positive
+        // up, and Z positive into the view
         let sunDirection = Float3.normalize ([-I, K, J]);
         let sunPosition = Float4.scale (sunDirection, sunDrawDistance);
 
@@ -330,8 +356,7 @@ let buildScene = function () {
         // where D is the number of UT1 days since J2000
         //let D = floor (time);
         let gmst = computeGmstFromJ2000 (time);
-        let LST = 0;//(time - Math.floor (time)) * 360;
-        node.transform = Float4x4.rotateY (Float4x4.identity (), Utility.degreesToRadians (gmst + LST));
+        node.transform = Float4x4.rotateY (Float4x4.identity (), Utility.degreesToRadians (gmst));
     });
 
     let moonScale = moonRadius / earthRadius; // approx 0.273
@@ -360,12 +385,86 @@ let buildScene = function () {
         // get the node
         let node = Node.get (this.node);
 
+        /* code from Vallado
+         ttdb = ( jd - 2451545.0  ) / 36525.0;
+
+         eclplong= 218.32  + 481267.8813 *ttdb ...
+         + 6.29 *sin( (134.9 +477198.85 *ttdb)*deg2rad ) ...
+         - 1.27 *sin( (259.2 -413335.38 *ttdb)*deg2rad ) ...
+         + 0.66 *sin( (235.7 +890534.23 *ttdb)*deg2rad ) ...
+         + 0.21 *sin( (269.9 +954397.70 *ttdb)*deg2rad ) ...
+         - 0.19 *sin( (357.5 + 35999.05 *ttdb)*deg2rad ) ...
+         - 0.11 *sin( (186.6 +966404.05 *ttdb)*deg2rad );      % deg
+
+         eclplat =   5.13 *sin( ( 93.3 +483202.03 *ttdb)*deg2rad ) ...
+         + 0.28 *sin( (228.2 +960400.87 *ttdb)*deg2rad ) ...
+         - 0.28 *sin( (318.3 +  6003.18 *ttdb)*deg2rad ) ...
+         - 0.17 *sin( (217.6 -407332.20 *ttdb)*deg2rad );      % deg
+
+         hzparal =  0.9508  + 0.0518 *cos( (134.9 +477198.85 *ttdb) ...
+         *deg2rad ) ...
+         + 0.0095 *cos( (259.2 -413335.38 *ttdb)*deg2rad ) ...
+         + 0.0078 *cos( (235.7 +890534.23 *ttdb)*deg2rad ) ...
+         + 0.0028 *cos( (269.9 +954397.70 *ttdb)*deg2rad );    % deg
+
+         eclplong = rem( eclplong*deg2rad, twopi );
+         eclplat  = rem( eclplat*deg2rad, twopi );
+         hzparal  = rem( hzparal*deg2rad, twopi );
+         %360+eclplong/deg2rad
+         %eclplat/deg2rad
+         %hzparal/deg2rad
+
+         obliquity= 23.439291  - 0.0130042 *ttdb;  %deg
+         obliquity= obliquity *deg2rad;
+
+         % ------------ find the geocentric direction cosines ----------
+         l= cos( eclplat ) * cos( eclplong );
+         m= cos(obliquity)*cos(eclplat)*sin(eclplong) ...
+         - sin(obliquity)*sin(eclplat);
+         n= sin(obliquity)*cos(eclplat)*sin(eclplong) ...
+         + cos(obliquity)*sin(eclplat);
+
+         % ------------- calculate moon position vector ----------------
+         magr = 1.0 /sin( hzparal );
+         rmoon(1)= magr*l;
+         rmoon(2)= magr*m;
+         rmoon(3)= magr*n;
+
+         */
+        /*
+
+        // We will use T_UT1 for T_TDB
+        let jc = time / 36525;
+
+        // compute ...
+        let eclipticLatitude = 0;
+        let eclipticLongitude = 0;
+        let parallax = 0;
+        let eclipticObliquity = 23.439291 - (0.0130042 * jc);
+
+        // compute the distance to the moon in astronomical units
+        let R = 1.000140612 - (0.016708617 * cos (meanAnomaly)) - (0.000139589 * cos (meanAnomaly + meanAnomaly));
+
+        // compute the ecliptic obliquity
+        let eclipticObliquity = 23.439291 - (0.0130042 * jc);
+
+        // compute geocentric equatorial coordinates
+        let sinEclipticLongitude = sin (eclipticLongitude);
+        let I = R * cos (eclipticLongitude);
+        let J = R * cos (eclipticObliquity) * sinEclipticLongitude;
+        let K = R * sin (eclipticObliquity) * sinEclipticLongitude;
+
+        // I am using a right handed coordinate system where X is positive to the left, Y positive
+        // up, and Z positive into the view
+        let sunDirection = Float3.normalize ([-I, K, J]);
+
         // https://en.wikipedia.org/wiki/Position_of_the_Sun
         // for J2000...
         let UT1 = 24 * 60 * 60;
         const millisecondsPerDay = UT1 * 1000;
         let julianDate = (time / millisecondsPerDay) + 2440587.5;
         let julianDay = julianDate - 2451545.0;
+        */
     });
 
     //LogLevel.set (LogLevel.TRACE);
