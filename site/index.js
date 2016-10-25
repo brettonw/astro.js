@@ -2,10 +2,6 @@
 
 let scene;
 
-//let currentTime = computeJ2000 (utc (2016, 3, 21, 6, 0, 0));
-//let currentTime = computeJ2000 (utc (2016, 10, 19, 7, 0, 0));
-let currentTime = computeJ2000 (new Date ());
-
 let currentPosition = [0, 0];
 
 let standardUniforms = Object.create(null);
@@ -23,12 +19,8 @@ let cloudsNode;
 let atmosphereNode;
 
 let draw = function (deltaPosition) {
-    if (Float2.normSq (deltaPosition) == 0) {
-        // advance the clock by an hour
-        //currentTime += 0.125;
-        // update all the things...
-        Thing.updateAll(currentTime);
-    }
+    let currentTime = computeJ2000 (new Date ());
+    Thing.updateAll(currentTime);
 
     // update the current position and clamp or wrap accordingly
     currentPosition = Float2.add (currentPosition, deltaPosition);
@@ -64,7 +56,7 @@ let draw = function (deltaPosition) {
     // we'll want to see on the near side, and the starfield on the far side
     let nearPlane = Math.max (0.1, hypotenuse - 80.0);
     let farPlane = hypotenuse + 211.0;
-    standardUniforms.PROJECTION_MATRIX_PARAMETER = Float4x4.perspective (fov, context.viewportWidth / context.viewportHeight, nearPlane, farPlane, Float4x4.create ());
+    standardUniforms.PROJECTION_MATRIX_PARAMETER = Float4x4.perspective (fov, context.viewportWidth / context.viewportHeight, nearPlane, farPlane);
 
     // compute the view parameters as up or down, and left or right
     let upAngle = currentPosition[1] * Math.PI * 0.5;
@@ -72,9 +64,9 @@ let draw = function (deltaPosition) {
 
     // setup the view matrix
     let viewMatrix = Float4x4.identity ();
-    Float4x4.rotateX (viewMatrix, upAngle);
+    viewMatrix = Float4x4.multiply (Float4x4.rotateX (upAngle), viewMatrix);
     viewMatrix  = Float4x4.multiply (Float4x4.translate ([0, viewOffset[1], viewOffset[0]]), viewMatrix);
-    Float4x4.rotateY (viewMatrix,currentPosition[0] * Math.PI);
+    viewMatrix = Float4x4.multiply (Float4x4.rotateY (currentPosition[0] * Math.PI), viewMatrix);
     //viewMatrix = Float4x4.multiply (Float4x4.scale ([ 2, 2, 2 ]), viewMatrix);
     //viewMatrix  = Float4x4.multiply (Float4x4.translate ([ -0.5, -0.5, -0.5 ]), viewMatrix);
     standardUniforms.VIEW_MATRIX_PARAMETER = viewMatrix;
@@ -133,9 +125,9 @@ let buildScene = function () {
     let starsTransform = Float4x4.identity ();
     // rotate by 180 degrees on the x axis to account for our coordinate system, then Y by 180
     // degrees to orient correctly. then flip it inside out and scale it up
-    starsTransform = Float4x4.multiply (starsTransform, Float4x4.rotateX (Float4x4.identity (), Math.PI));
-    starsTransform = Float4x4.multiply (starsTransform, Float4x4.rotateY (Float4x4.identity (), Math.PI));
-    starsTransform = Float4x4.multiply (starsTransform, Float4x4.scale (-210));
+    starsTransform = Float4x4.multiply (Float4x4.rotateX (Math.PI), starsTransform);
+    starsTransform = Float4x4.multiply (Float4x4.rotateY (Math.PI), starsTransform);
+    starsTransform = Float4x4.multiply (Float4x4.scale (-210), starsTransform);
     starsNode = Node.new ({
         name: "stars",
         transform: starsTransform,
@@ -404,7 +396,7 @@ let buildScene = function () {
         // where D is the number of UT1 days since J2000
         //let D = floor (time);
         let gmst = computeGmstFromJ2000 (time);
-        node.transform = Float4x4.rotateY (Float4x4.identity (), Utility.degreesToRadians (gmst));
+        node.transform = Float4x4.rotateY (Utility.degreesToRadians (gmst));
     });
 
     //LogLevel.set (LogLevel.TRACE);
