@@ -12,6 +12,7 @@ let showCloudsCheckbox;
 let showAtmosphereCheckbox;
 let fovRange;
 let framingRange;
+let timeRange;
 
 let starsNode;
 let constellationsNode;
@@ -20,7 +21,10 @@ let atmosphereNode;
 
 let draw = function (deltaPosition) {
     let currentTime = computeJ2000 (new Date ());
-    Thing.updateAll(currentTime);
+    let timeRangeValue = timeRange.value;
+    timeRangeValue -= 50;
+    timeRangeValue /= 24;
+    Thing.updateAll(currentTime + timeRangeValue);
 
     // update the current position and clamp or wrap accordingly
     currentPosition = Float2.add (currentPosition, deltaPosition);
@@ -306,7 +310,7 @@ let buildScene = function () {
         let moonPosition = Float3.scale (moonDirection, moonDistance);
 
         // compute the position of the sun, and update the lighting conversation
-        node.transform = Float4x4.multiply (Float4x4.scale (moonScale * 4), Float4x4.translate (moonPosition));
+        node.transform = Float4x4.multiply (Float4x4.scale (moonScale), Float4x4.translate (moonPosition));
     });
 
     let worldNode = Node.new ({
@@ -416,6 +420,7 @@ let onBodyLoad = function () {
     showAtmosphereCheckbox = document.getElementById("showAtmosphereCheckbox");
     fovRange = document.getElementById("fovRange");
     framingRange = document.getElementById("framingRange");
+    timeRange = document.getElementById("timeRange");
 
     // load the basic shaders from the original soure
     LoaderShader.new ("http://webgl-js.azurewebsites.net/site/shaders/@.glsl")
