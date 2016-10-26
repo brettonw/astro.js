@@ -13,18 +13,33 @@ let showAtmosphereCheckbox;
 let fovRange;
 let framingRange;
 let timeRange;
+let dayRange;
 
 let starsNode;
 let constellationsNode;
 let cloudsNode;
 let atmosphereNode;
 
+let scaleRange = function (range, deadZone) {
+    let rangeValue = range.value;
+    let rangeMax = range.max;
+    let rangeMid = rangeMax / 2;
+    rangeValue -= rangeMid;
+    rangeValue *= (1 + deadZone);
+    let rawOffset = Math.max (0, Math.abs (rangeValue) - (deadZone * rangeMid));
+    return (Math.sign (rangeValue) * rawOffset) / rangeMid;
+};
+
+let currentTime = computeJ2000 (new Date ());
+let paused = false;
+
 let draw = function (deltaPosition) {
-    let currentTime = computeJ2000 (new Date ());
-    let timeRangeValue = timeRange.value;
-    timeRangeValue -= 50;
-    timeRangeValue /= 24;
-    Thing.updateAll(currentTime + timeRangeValue);
+    if (! paused) {
+        currentTime = computeJ2000 (new Date ());
+    }
+    let hourDelta = scaleRange(timeRange, 0.05) * 2.0;
+    let dayDelta = scaleRange(dayRange, 0.05) * 180.0;
+    Thing.updateAll(currentTime + dayDelta + hourDelta);
 
     // update the current position and clamp or wrap accordingly
     currentPosition = Float2.add (currentPosition, deltaPosition);
@@ -420,7 +435,8 @@ let onBodyLoad = function () {
     showAtmosphereCheckbox = document.getElementById("showAtmosphereCheckbox");
     fovRange = document.getElementById("fovRange");
     framingRange = document.getElementById("framingRange");
-    timeRange = document.getElementById("timeRange");
+    timeRange = document.getElementById ("timeRange");
+    dayRange = document.getElementById ("dayRange");
 
     // load the basic shaders from the original soure
     LoaderShader.new ("http://webgl-js.azurewebsites.net/site/shaders/@.glsl")
