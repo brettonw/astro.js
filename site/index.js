@@ -258,12 +258,12 @@ let buildScene = function () {
             context.enable (context.DEPTH_TEST);
             context.depthMask (true);
             Program.get ("basic-texture").use ();
-            standardUniforms.AMBIENT_LIGHT_COLOR = [1.0, 0.5, 0.5];
+            standardUniforms.AMBIENT_LIGHT_COLOR = [1.0, 1.0, 1.0];
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
             standardUniforms.TEXTURE_SAMPLER = "moon";
             standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
-            standardUniforms.AMBIENT_CONTRIBUTION = 0.5;
-            standardUniforms.DIFFUSE_CONTRIBUTION = 1.25;
+            standardUniforms.AMBIENT_CONTRIBUTION = 0.1;
+            standardUniforms.DIFFUSE_CONTRIBUTION = 0.9;
             standardUniforms.SPECULAR_CONTRIBUTION = 0.05;
             standardUniforms.SPECULAR_EXPONENT = 8.0;
         },
