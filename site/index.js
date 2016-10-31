@@ -20,6 +20,8 @@ let constellationsNode;
 let cloudsNode;
 let atmosphereNode;
 
+let timeDisplay;
+
 let scaleRange = function (range, deadZone) {
     let rangeValue = range.value;
     let rangeMax = range.max;
@@ -35,11 +37,16 @@ let paused = false;
 
 let draw = function (deltaPosition) {
     if (! paused) {
-        currentTime = computeJ2000 (new Date ());
+        //currentTime = computeJ2000 (new Date ());
+        currentTime - computeJ2000(new Date (2017, 7, 21))
     }
     let hourDelta = scaleRange(timeRange, 0.05) * 2.0;
     let dayDelta = scaleRange(dayRange, 0.05) * 180.0;
-    Thing.updateAll(currentTime + dayDelta + hourDelta);
+    let displayTime = currentTime + dayDelta + hourDelta;
+    Thing.updateAll(displayTime);
+
+    // XXX convert from our display time to a Javascript Date
+    timeDisplay.innerHTML = "JD: " + displayTime.toFixed(4);
 
     // update the current position and clamp or wrap accordingly
     currentPosition = Float2.add (currentPosition, deltaPosition);
@@ -263,7 +270,7 @@ let buildScene = function () {
             standardUniforms.TEXTURE_SAMPLER = "moon";
             standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
             standardUniforms.AMBIENT_CONTRIBUTION = 0.1;
-            standardUniforms.DIFFUSE_CONTRIBUTION = 0.8;
+            standardUniforms.DIFFUSE_CONTRIBUTION = 0.9;
             standardUniforms.SPECULAR_CONTRIBUTION = 0.05;
             standardUniforms.SPECULAR_EXPONENT = 8.0;
         },
@@ -439,6 +446,7 @@ let onBodyLoad = function () {
     framingRange = document.getElementById("framingRange");
     timeRange = document.getElementById ("timeRange");
     dayRange = document.getElementById ("dayRange");
+    timeDisplay = document.getElementById("timeDisplay");
 
     // load the basic shaders from the original soure
     LoaderShader.new ("http://webgl-js.azurewebsites.net/site/shaders/@.glsl")
