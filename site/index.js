@@ -263,7 +263,7 @@ let buildScene = function () {
             standardUniforms.TEXTURE_SAMPLER = "moon";
             standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
             standardUniforms.AMBIENT_CONTRIBUTION = 0.1;
-            standardUniforms.DIFFUSE_CONTRIBUTION = 0.9;
+            standardUniforms.DIFFUSE_CONTRIBUTION = 0.8;
             standardUniforms.SPECULAR_CONTRIBUTION = 0.05;
             standardUniforms.SPECULAR_EXPONENT = 8.0;
         },
@@ -322,10 +322,12 @@ let buildScene = function () {
         // I am using a right handed coordinate system where X is positive to the left, Y positive
         // up, and Z positive into the view
         let moonDirection = Float3.normalize ([-I, K, J]);
+        // moon debugging is easier if the moon is close and big
+        //moonDistance = 4.0; moonScale = 1.0;
         let moonPosition = Float3.scale (moonDirection, moonDistance);
 
         // compute the position of the sun, and update the lighting conversation
-        node.transform = Float4x4.multiply (Float4x4.scale (moonScale), Float4x4.translate (moonPosition));
+        node.transform = Float4x4.chain (Float4x4.scale (moonScale), Float4x4.rotateXAxisTo (moonDirection), Float4x4.translate (moonPosition));
     });
 
     let worldNode = Node.new ({
