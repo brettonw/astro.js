@@ -80,21 +80,46 @@ let draw = function (deltaPosition) {
     //console.log("Setting Projection at: " + hypotenuse);
     // I'm cheating with the near/far, I know the moon and anything orbiting it is the farthest out
     // we'll want to see on the near side, and the starfield on the far side
+    /*
     let nearPlane = Math.max (0.1, hypotenuse - 80.0);
     let farPlane = hypotenuse + 211.0;
+    */
+    let nearPlane = 1;
+    let farPlane = 500;
     standardUniforms.PROJECTION_MATRIX_PARAMETER = Float4x4.perspective (fov, context.viewportWidth / context.viewportHeight, nearPlane, farPlane);
 
+    let rootNode = Node.get ("root");
+
+    // get the sun node, run a point through the transformation
+    let lookFromNode = Node.get ("sun");
+    let lookFromTransform = lookFromNode.getTransform (rootNode);
+    let lookFromPoint = Float4x4.preMultiply ([0,0,0,1], lookFromTransform);
+    console.log ("LOOK FROM: " + Float3.str (lookFromPoint));
+
+    // get the earth node, run a point through the transformation
+    let lookAtNode = Node.get ("earth");
+    let lookAtTransform = lookAtNode.getTransform (rootNode);
+    let lookAtPoint = Float4x4.preMultiply ([0,0,0,1], lookAtTransform);
+    console.log ("LOOK AT: " + Float3.str (lookAtPoint));
+
+    // compute the view matrix
+    let viewMatrix = Float4x4.lookFromAt (lookFromPoint, lookAtPoint);
+
     // compute the view parameters as up or down, and left or right
+    /*
     let upAngle = currentPosition[1] * Math.PI * 0.5;
     let viewOffset = Float2.scale ([Math.cos (upAngle), Math.sin (upAngle)], -hypotenuse);
+    */
 
     // setup the view matrix
+    /*
     let viewMatrix = Float4x4.identity ();
     viewMatrix = Float4x4.multiply (Float4x4.rotateX (upAngle), viewMatrix);
     viewMatrix  = Float4x4.multiply (Float4x4.translate ([0, viewOffset[1], viewOffset[0]]), viewMatrix);
     viewMatrix = Float4x4.multiply (Float4x4.rotateY (currentPosition[0] * Math.PI), viewMatrix);
     //viewMatrix = Float4x4.multiply (Float4x4.scale ([ 2, 2, 2 ]), viewMatrix);
     //viewMatrix  = Float4x4.multiply (Float4x4.translate ([ -0.5, -0.5, -0.5 ]), viewMatrix);
+    */
     standardUniforms.VIEW_MATRIX_PARAMETER = viewMatrix;
     standardUniforms.MODEL_MATRIX_PARAMETER = Float4x4.identity ();
 
@@ -245,6 +270,7 @@ let buildScene = function () {
         // I am using a right handed coordinate system where X is positive to the left, Y positive
         // up, and Z positive into the view
         let sunDirection = Float3.normalize ([-I, K, J]);
+        console.log ("SUN: " + Float3.str (sunDirection));
         let sunPosition = Float3.scale (sunDirection, sunDrawDistance);
 
         // compute the relative scale of the sun to reflect the changing distance in our orbit
