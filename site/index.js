@@ -44,7 +44,7 @@ let draw = function (deltaPosition) {
     if (refreshTimeoutId != 0) {
         clearTimeout (refreshTimeoutId);
     }
-    setTimeout(function () { draw ([0, 0]); }, 1000 * 60);
+    refreshTimeoutId = setTimeout(function () { draw ([0, 0]); }, 1000 * 60);
 
     // determine how to set the clock
     let timeType = document.getElementById ("timeTypeSelect").value;
@@ -74,17 +74,12 @@ let draw = function (deltaPosition) {
     starsNode.alpha = zoomRangeValueInverse;
     let fov = 0.5 + (59.5 * zoomRangeValueInverse);
 
-    //console.log("Setting Projection at: " + hypotenuse);
-    // I'm cheating with the near/far, I know the moon and anything orbiting it is the farthest out
-    // we'll want to see on the near side, and the starfield on the far side
-    /*
-    let nearPlane = Math.max (0.1, hypotenuse - 80.0);
-    let farPlane = hypotenuse + 211.0;
-    */
+    // set up the projection matrix
     let nearPlane = 0.1;
     let farPlane = 440;
     standardUniforms.PROJECTION_MATRIX_PARAMETER = Float4x4.perspective (fov, context.viewportWidth / context.viewportHeight, nearPlane, farPlane);
 
+    // get the selected camera and tease out the parameters for it
     let cameraSelect = document.getElementById ("cameraSelect").value;
     let cameraSelectSplit = cameraSelect.split(";");
     let cameraFrom = cameraSelectSplit[0];
@@ -93,7 +88,7 @@ let draw = function (deltaPosition) {
     let lookAtNode = Node.get (cameraTo);
     let cameraUp = Utility.defaultValue (cameraSelectSplit[2], "y-up");
 
-    // run a point through the "to" node transformation
+    // get the "to" node origin
     let lookAtTransform = lookAtNode.getTransform ();
     let lookAtPoint = Float4x4.preMultiply ([0, 0, 0, 1], lookAtTransform);
     //console.log ("LOOK AT: " + Float3.str (lookAtPoint));
@@ -116,23 +111,20 @@ let draw = function (deltaPosition) {
         let boundRadius = 1.0;
         let goalOpposite = boundRadius / zoomRangeValue;
         let sinTheta = Utility.sin (fov / 2.0);
-        let hypotenuse = goalOpposite / sinTheta;
+        let hypotenuse = Math.min (goalOpposite / sinTheta, 100);
+        console.log ("Hypotenuse = " + hypotenuse);
+        hypotenuse = Math.min (hypotenuse, 70);
 
         // setup the transformation matrix
-        let cameraMatrix = Float4x4.chain (
+        lookFromNode.transform = Float4x4.chain (
             Float4x4.translate ([hypotenuse, 0, 0]),
             Float4x4.rotateZ (currentPosition[1] * Math.PI * 0.5),
             Float4x4.rotateY (currentPosition[0] * Math.PI * -1),
             Float4x4.translate (lookAtPoint)
         );
-
-        // apply it
-        // XXX this probably needs to either incorporate the "to" node transform, or it needs to be
-        // XXX a relocated node to be a child of the "to"
-        lookFromNode.transform = cameraMatrix;
     }
 
-    // run a point through the "from" nodetransformation
+    // get the "from" node origin
     let lookFromTransform = lookFromNode.getTransform ();
     let lookFromPoint = Float4x4.preMultiply ([0, 0, 0, 1], lookFromTransform);
     //console.log ("LOOK FROM: " + Float3.str (lookFromPoint));
@@ -148,7 +140,6 @@ let draw = function (deltaPosition) {
 
     // compute the view matrix
     let viewMatrix = Float4x4.lookFromAt (lookFromPoint, lookAtPoint, up);
-    //let viewMatrix = Float4x4.lookAlongAt (3, 50, Float3.subtract (lookAtPoint, lookFromPoint), lookAtPoint);
 
     standardUniforms.VIEW_MATRIX_PARAMETER = viewMatrix;
     standardUniforms.MODEL_MATRIX_PARAMETER = Float4x4.identity ();
@@ -176,49 +167,6 @@ let selectCamera = function () {
     draw ([0, 0]);
 };
 
-let updateSolarSystem = function (time) {
-    // cos and sin routines that work on degrees (unwraps intrinsically)
-    let cos = Utility.cos;
-    let sin = Utility.sin;
-
-    // compute the julian century
-    let jc = time / 36525;
-
-    // SUN
-    {
-        // compute the mean longitude and mean anomaly of the sun (degrees)
-        let meanLongitude = 280.460 + (36000.77 * jc);
-        let meanAnomaly = 357.5277233 + (35999.05034 * jc);
-
-        // compute the ecliptic longitude of the sun (degrees)
-        let eclipticLongitude = meanLongitude + (1.914666471 * sin (meanAnomaly)) + (0.019994643 * sin (meanAnomaly + meanAnomaly));
-
-        // compute the distance to the sun in astronomical units
-        solarSystem.sunR = 1.000140612 - (0.016708617 * cos (meanAnomaly)) - (0.000139589 * cos (meanAnomaly + meanAnomaly));
-
-        // compute the ecliptic obliquity (degrees)
-        let eclipticObliquity = 23.439291 - (0.0130042 * jc);
-
-        // compute geocentric equatorial coordinates, note that these are re-ordered to reflect the
-        // rotation of the solar system coordinate frame into my Y-up viewing frame
-        let sinEclipticLongitude = sin (eclipticLongitude);
-        let I = cos (eclipticLongitude);
-        let J = cos (eclipticObliquity) * sinEclipticLongitude;
-        let K = sin (eclipticObliquity) * sinEclipticLongitude;
-
-        solarSystem.sunDirection = Float3.normalize ([-I, K, J]);
-    }
-
-    // MOON
-    {
-
-    }
-
-    // L1
-    {
-
-    }
-};
 
 let buildScene = function () {
     makeRevolve ("cylinder",
@@ -308,15 +256,6 @@ let buildScene = function () {
     });
     starsNode.addChild (constellationsNode);
 
-    // radii in km so I can do some reasoning about scales...
-    const earthRadius = 6378.1370;
-    const sunRadius = 695700.0;
-    const earthOrbit = 149597870.700;
-
-    const sunDistance = earthOrbit / earthRadius;
-
-    // compute the drawDistance so that the actual sun scale is usually about 1
-    const sunDrawDistance = (sunDistance * earthRadius) / sunRadius;
     console.log ("Sun draw distance = " + sunDrawDistance);
     let sunNode = Node.new ({
         name: "sun",
@@ -345,9 +284,6 @@ let buildScene = function () {
         standardUniforms.LIGHT_DIRECTION = solarSystem.sunDirection;
     });
 
-    const moonRadius = 1737.1;
-    //let moonOrbit = 384405.0;
-    const moonScale = moonRadius / earthRadius; // approx 0.273
     let moonNode = Node.new ({
         name: "moon",
         transform: Float4x4.identity (),
@@ -373,58 +309,11 @@ let buildScene = function () {
         // get the node
         let node = Node.get (this.node);
 
-        // cos and sin routines that work on degrees (unwraps intrinsically)
-        let cos = Utility.cos;
-        let sin = Utility.sin;
-
-        // compute the julian century
-        let jc = time / 36525;
-
-        let eclipticLongitude = 218.32 + (481267.8813 * jc)
-        + (6.29 * sin (134.9 + (477198.85 * jc)))
-        - (1.27 * sin (259.2 - (413335.38 * jc)))
-        + (0.66 * sin (235.7 + (890534.23 * jc)))
-        + (0.21 * sin (269.9 + (954397.70 * jc)))
-        - (0.19 * sin (357.5 + (35999.05 * jc)))
-        - (0.11 * sin (186.6 + (966404.05 * jc)));
-
-        let eclipticLatitude =
-            (5.13 * sin (93.3 + (483202.03 * jc)))
-          + (0.28 * sin (228.2 + (960400.87 * jc)))
-          - (0.28 * sin (318.3 + (6003.18 * jc)))
-          - (0.17 * sin (217.6 - (407332.20 * jc)));
-
-        let horizontalParallax = 0.9508
-            + (0.0518 * cos (134.9 + (477198.85 * jc)))
-            + (0.0095 * cos (259.2 - (413335.38 * jc)))
-            + (0.0078 * cos (235.7 + (890534.23 * jc)))
-            + (0.0028 * cos (269.9 + (954397.70 * jc)));
-
-        let eclipticObliquity = 23.439291 - (0.0130042 * jc);
-
-        // compute the distance to the sun in astronomical units
-        let moonDistance = 1.0 / sin (horizontalParallax);
-
-        // compute geocentric equatorial coordinates
-        let cosEclipticLongitude = cos (eclipticLongitude);
-        let sinEclipticLongitude = sin (eclipticLongitude);
-        let cosEclipticLatitude = cos (eclipticLatitude);
-        let sinEclipticLatitude = sin (eclipticLatitude);
-        let cosEclipticObliquity = cos (eclipticObliquity);
-        let sinEclipticObliquity = sin (eclipticObliquity);
-        let I = cosEclipticLatitude * cosEclipticLongitude;
-        let J = ((cosEclipticObliquity * cosEclipticLatitude * sinEclipticLongitude) - (sinEclipticObliquity * sinEclipticLatitude));
-        let K = ((sinEclipticObliquity * cosEclipticLatitude * sinEclipticLongitude) + (cosEclipticObliquity * sinEclipticLatitude));
-
-        // I am using a right handed coordinate system where X is positive to the left, Y positive
-        // up, and Z positive into the view
-        let moonDirection = Float3.normalize ([-I, K, J]);
-        // moon debugging is easier if the moon is close and big
-        //moonDistance = 4.0; moonScale = 1.0;
-        let moonPosition = Float3.scale (moonDirection, moonDistance);
-
-        // compute the position of the sun, and update the lighting conversation
-        node.transform = Float4x4.chain (Float4x4.scale (moonScale), Float4x4.rotateXAxisTo (moonDirection), Float4x4.translate (moonPosition));
+        // set the moon position and orientation in transform
+        node.transform = Float4x4.chain (
+            Float4x4.scale (moonScale),
+            Float4x4.rotateXAxisTo (solarSystem.moonDirection),
+            Float4x4.translate (Float3.scale (solarSystem.moonDirection, solarSystem.moonR)));
     });
 
     let worldNode = Node.new ({
@@ -588,48 +477,10 @@ let buildScene = function () {
     scene.addChild (dscovrNode);
 
     Thing.new ("DSCOVR", "DSCOVR", function (time) {
-        // cos and sin routines that work on degrees (unwraps intrinsically)
-        let cos = Utility.cos;
-        let sin = Utility.sin;
-
-        // compute the julian century
-        let jc = time / 36525;
-
-        // compute the mean longitude and mean anomaly of the sun (degrees)
-        let meanLongitude = 280.460 + (36000.77 * jc);
-        let meanAnomaly = 357.5277233 + (35999.05034 * jc);
-
-        // compute the ecliptic longitude of the sun (degrees)
-        let eclipticLongitude = meanLongitude + (1.914666471 * sin (meanAnomaly)) + (0.019994643 * sin (meanAnomaly + meanAnomaly));
-
-        // compute the distance to the sun in astronomical units
-        let R = 1.000140612 - (0.016708617 * cos (meanAnomaly)) - (0.000139589 * cos (meanAnomaly + meanAnomaly));
-
-        // compute the ecliptic obliquity (degrees)
-        let eclipticObliquity = 23.439291 - (0.0130042 * jc);
-
-        // compute geocentric equatorial coordinates
-        let sinEclipticLongitude = sin (eclipticLongitude);
-        let I = R * cos (eclipticLongitude);
-        let J = R * cos (eclipticObliquity) * sinEclipticLongitude;
-        let K = R * sin (eclipticObliquity) * sinEclipticLongitude;
-
-        // I am using a right handed coordinate system where X is positive to the left, Y positive
-        // up, and Z positive into the view
-        let sunDirection = Float3.normalize ([-I, K, J]);
-
-        // DSCOVR is tracking the L1 point, and seems to be oriented with the geocentric coordinate
-        // frame. this is just an approximation of that position, at 0.01 astronomical units. The
-        // actual satellite has a Lissajous orbit around the Earth/Sun line, varying approximately
-        // +/- 10 degrees over a 6 month period. I'm unable to find a detailed summary of how to
-        // compute the position of the satellite, so I'm just going with L1
-        let r = 0.01;
-        let l1 = Float3.scale (sunDirection, (r * R * earthOrbit) / earthRadius);
-        //console.log ("L1 = " + Float3.str (l1));
-
-        // get the node
+        // get the node, and set the L1 transform - because our system is scaled around the
+        // earth/moon region, we scale this down to fit...
         let node = Node.get (this.node);
-        node.transform = Float4x4.translate (l1);
+        node.transform = Float4x4.translate (Float3.scale (solarSystem.L1, 0.5));
     });
 
     //LogLevel.set (LogLevel.TRACE);

@@ -1,0 +1,13 @@
+{
+    "project": {
+        "name": "WebGL",
+        "url": "webgl-render.azurewebsites.net",
+        "version": "1.0.0"
+    },
+    "files": {},
+    "modules": {},
+    "classes": {},
+    "elements": {},
+    "classitems": [],
+    "warnings": []
+}
