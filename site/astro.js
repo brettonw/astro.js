@@ -82,7 +82,8 @@ let angleToRadians = function (angle) {
         let hours = angle.hours + (minutes / 60);
         circleFraction = (hours / 24.0);
     } else if ("degrees" in angle) {
-        let degrees = angle.degrees + (minutes / 60);;
+        let degrees = angle.degrees + (minutes / 60);
+        ;
         circleFraction = degrees / 360.0;
     }
     return circleFraction * 2 * Math.PI;
@@ -96,7 +97,8 @@ let angleToDegrees = function (angle) {
         let hours = angle.hours + (minutes / 60);
         circleFraction = (hours / 24.0);
     } else if ("degrees" in angle) {
-        let degrees = angle.degrees + (minutes / 60);;
+        let degrees = angle.degrees + (minutes / 60);
+        ;
         circleFraction = degrees / 360.0;
     }
     return circleFraction * 360.0;
@@ -105,7 +107,7 @@ let angleToDegrees = function (angle) {
 let testHourAngleToRadians = function () {
     let affirm = function (description, value, expect) {
         let pass = Math.abs (value - expect) < 1.0e-6;
-        if (! pass) {
+        if (!pass) {
             console.log (description + ", got (" + value + "), expected (" + expect + "): FAIL");
         }
     };
@@ -113,11 +115,27 @@ let testHourAngleToRadians = function () {
     affirm ("1h", angleToRadians ({ hours: 1, minutes: 0, seconds: 0 }), (1 / 24) * (2 * Math.PI));
     affirm ("2h", angleToRadians ({ hours: 2, minutes: 0, seconds: 0 }), (2 / 24) * (2 * Math.PI));
 
-    affirm ("1h 30m", angleToRadians ({ hours: 1, minutes: 30, seconds: 0 }), (1.5 / 24) * (2 * Math.PI));
-    affirm ("1h 31m", angleToRadians ({ hours: 1, minutes: 31, seconds: 0 }), ((1 + (31 / 60)) / 24) * (2 * Math.PI));
+    affirm ("1h 30m", angleToRadians ({
+        hours: 1,
+        minutes: 30,
+        seconds: 0
+    }), (1.5 / 24) * (2 * Math.PI));
+    affirm ("1h 31m", angleToRadians ({
+        hours: 1,
+        minutes: 31,
+        seconds: 0
+    }), ((1 + (31 / 60)) / 24) * (2 * Math.PI));
 
-    affirm ("1h 30m 30s", angleToRadians ({ hours: 1, minutes: 30, seconds: 30 }), ((1 + (30 / 60) + (30 / (60 * 60))) / 24) * (2 * Math.PI));
-    affirm ("1h 30m 31s", angleToRadians ({ hours: 1, minutes: 30, seconds: 31 }), ((1 + (30 / 60) + (31 / (60 * 60))) / 24) * (2 * Math.PI));
+    affirm ("1h 30m 30s", angleToRadians ({
+        hours: 1,
+        minutes: 30,
+        seconds: 30
+    }), ((1 + (30 / 60) + (30 / (60 * 60))) / 24) * (2 * Math.PI));
+    affirm ("1h 30m 31s", angleToRadians ({
+        hours: 1,
+        minutes: 30,
+        seconds: 31
+    }), ((1 + (30 / 60) + (31 / (60 * 60))) / 24) * (2 * Math.PI));
 } ();
 
 String.prototype.test = function (re) {
@@ -150,7 +168,7 @@ let bareObjectToString = function (bareObject) {
     let result = "";
     let first = true;
     for (component in bareObject) {
-        if (! first) {
+        if (!first) {
             result += " ";
         }
         result += component + ": " + bareObject[component];
@@ -166,7 +184,7 @@ let testHourAngleFromString = function () {
         for (component in test) {
             pass &= ((component in expect) && (expect[component] == test[component]));
         }
-        if (! pass) {
+        if (!pass) {
             console.log (angleString + ", got (" + bareObjectToString (test) + "), expected (" + bareObjectToString (expect) + "): FAIL");
         }
     };
@@ -180,15 +198,15 @@ let testHourAngleFromString = function () {
 let eclipticPlaneObliquity = function (t) {
     // Astronomical Almanac for 2010
     // ε = 23° 26′ 21″.406 − 46″.836769 T − 0″.0001831 T2 + 0″.00200340 T3 − 0″.576×10−6 T4 − 4″.34×10−8 T5
-    let e = angleToRadians(angleFromString ("23° 26′ 21.406″"));
-    e -= (angleToRadians(angleFromString ("0° 0′ 46.836769″"))) * t;
-    e -= (angleToRadians(angleFromString ("0° 0′ 0.0001831″"))) * t * t;
-    e -= (angleToRadians(angleFromString ("0° 0′ 0.00200340″"))) * t * t * t;
-    e -= (angleToRadians(angleFromString ("0° 0′ 5.76e−7″"))) * t * t * t * t;
-    e -= (angleToRadians(angleFromString ("0° 0′ 4.34e−8″"))) * t * t * t * t *t;
+    let e = angleToRadians (angleFromString ("23° 26′ 21.406″"));
+    e -= (angleToRadians (angleFromString ("0° 0′ 46.836769″"))) * t;
+    e -= (angleToRadians (angleFromString ("0° 0′ 0.0001831″"))) * t * t;
+    e -= (angleToRadians (angleFromString ("0° 0′ 0.00200340″"))) * t * t * t;
+    e -= (angleToRadians (angleFromString ("0° 0′ 5.76e−7″"))) * t * t * t * t;
+    e -= (angleToRadians (angleFromString ("0° 0′ 4.34e−8″"))) * t * t * t * t * t;
     return e;
 } (16 / 100);
-console.log("Ecliptic Plane Obliquity: " + eclipticPlaneObliquity + "rad");
+console.log ("Ecliptic Plane Obliquity: " + eclipticPlaneObliquity + "rad");
 
 let utc = function (year, month, day, hour, minutes, seconds) {
     let now = new Date ();
@@ -242,7 +260,7 @@ let testJ2000 = function () {
     let gmst_also = ((((-6.2e-6 * T_uti + 0.093104) * T_uti + 184.812866) * T_uti + 67310.54841) + 3.1644e9 * T_uti);
     affirm ("GMST", GMST, -232984181.0909255);
     affirm ("GMST", GMST, gmst_also);
-    GMST = Utility.unwind(GMST, 86400);
+    GMST = Utility.unwind (GMST, 86400);
     affirm ("GMST manageable", GMST, -49781.0909255);
     GMST /= 240;
     affirm ("GMST to degrees", GMST, 152.578878810);
