@@ -1,6 +1,7 @@
 "use strict;"
 
-let scene;
+let starsScene;
+let solarSystemScene;
 
 let standardUniforms = Object.create(null);
 
@@ -74,11 +75,6 @@ let draw = function (deltaPosition) {
     starsNode.alpha = zoomRangeValueInverse;
     let fov = 0.5 + (59.5 * zoomRangeValueInverse);
 
-    // set up the projection matrix
-    let nearPlane = 0.1;
-    let farPlane = 440;
-    standardUniforms.PROJECTION_MATRIX_PARAMETER = Float4x4.perspective (fov, context.viewportWidth / context.viewportHeight, nearPlane, farPlane);
-
     // get the selected camera and tease out the parameters for it
     let cameraSelect = document.getElementById ("cameraSelect").value;
     let cameraSelectSplit = cameraSelect.split(";");
@@ -112,7 +108,7 @@ let draw = function (deltaPosition) {
         let goalOpposite = boundRadius / zoomRangeValue;
         let sinTheta = Utility.sin (fov / 2.0);
         let hypotenuse = Math.min (goalOpposite / sinTheta, 100);
-        console.log ("Hypotenuse = " + hypotenuse);
+        //console.log ("Hypotenuse = " + hypotenuse);
         hypotenuse = Math.min (hypotenuse, 70);
 
         // setup the transformation matrix
@@ -141,6 +137,30 @@ let draw = function (deltaPosition) {
     // compute the view matrix
     let viewMatrix = Float4x4.lookFromAt (lookFromPoint, lookAtPoint, up);
 
+    // update the visibility layers
+    starsNode.enabled = showStarsCheckbox.checked;
+    constellationsNode.enabled = showConstellationsCheckbox.checked;
+
+    // ordinarily, webGl will automatically present and clear when we return control to the
+    // event loop from the draw function, but we overrode that to have explicit control.
+    // webGl still presents the buffer automatically, but the back buffer is not cleared
+    // until we do it...
+    context.clear (context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT);
+
+    // draw the scene
+    let starsViewMatrix = Float4x4.copy (viewMatrix);
+    starsViewMatrix[12] = starsViewMatrix[13] = starsViewMatrix[14] = 0.0;
+    standardUniforms.CAMERA_POSITION = [0, 0, 0];
+    standardUniforms.PROJECTION_MATRIX_PARAMETER = Float4x4.perspective (fov, context.viewportWidth / context.viewportHeight, 1, starSphereRadius + 1);
+    standardUniforms.VIEW_MATRIX_PARAMETER = starsViewMatrix;
+    standardUniforms.MODEL_MATRIX_PARAMETER = Float4x4.identity ();
+    starsScene.traverse (standardUniforms);
+
+    // update the visibility layers
+    cloudsNode.enabled = showCloudsCheckbox.checked;
+    atmosphereNode.enabled = showAtmosphereCheckbox.checked;
+
+    // set up to draw the solar system
     standardUniforms.VIEW_MATRIX_PARAMETER = viewMatrix;
     standardUniforms.MODEL_MATRIX_PARAMETER = Float4x4.identity ();
 
@@ -149,14 +169,14 @@ let draw = function (deltaPosition) {
     standardUniforms.CAMERA_POSITION = [vmi[12], vmi[13], vmi[14]];
     //console.log ("CAMERA AT: " + Float3.str (standardUniforms.CAMERA_POSITION));
 
-    // update the visibility layers
-    starsNode.enabled = showStarsCheckbox.checked;
-    constellationsNode.enabled = showConstellationsCheckbox.checked;
-    cloudsNode.enabled = showCloudsCheckbox.checked;
-    atmosphereNode.enabled = showAtmosphereCheckbox.checked;
-
-    // draw the scene
-    scene.traverse (standardUniforms);
+    // look at where the camera is and set the near and far planes accordingly
+    // set up the projection matrix
+    let cameraPositionDistance = Float3.norm (standardUniforms.CAMERA_POSITION);
+    let moonR = solarSystem.moonR * 1.1;
+    let nearPlane = Math.max (0.1, cameraPositionDistance - moonR);
+    let farPlane = cameraPositionDistance + moonR;
+    standardUniforms.PROJECTION_MATRIX_PARAMETER = Float4x4.perspective (fov, context.viewportWidth / context.viewportHeight, nearPlane, farPlane);
+    solarSystemScene.traverse (standardUniforms);
 };
 
 let selectCamera = function () {
@@ -176,73 +196,32 @@ let buildScene = function () {
     makeBall ("ball", 72);
     makeBall ("ball-small", 36);
 
-    scene = Node.new ({
-        name: "root",
+    starsScene = Node.new ({
         state: function (standardUniforms) {
-            // ordinarily, webGl will automatically present and clear when we return control to the
-            // event loop from the draw function, but we overrode that to have explicit control.
-            // webGl still presents the buffer automatically, but the back buffer is not cleared
-            // until we do it...
-            context.clearColor (0.0, 0.0, 0.0, 1.0);
-            context.clear (context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT);
-
-            // back face culling enabled
-            context.enable (context.CULL_FACE);
-            context.cullFace (context.BACK);
-
-            // extensions I want for getting gradient infomation inside the fragment shaders
-            //context.getExtension ("OES_standard_derivatives");
-            //context.getExtension ("EXT_shader_texture_lod");
-
-            // oh for &#^%'s sake, alpha blending should be standard
-            context.blendFunc (context.SRC_ALPHA, context.ONE_MINUS_SRC_ALPHA);
-            context.enable (context.BLEND);
-
-            // a little bit of setup for lighting
-            standardUniforms.AMBIENT_LIGHT_COLOR = [1.0, 1.0, 1.0];
-            standardUniforms.LIGHT_COLOR = [1.0, 1.0, 1.0];
-        }
+            context.disable (context.DEPTH_TEST);
+            context.depthMask (false);
+        },
     });
 
-    // add a root camera node
-    let cameraNode = Node.new ({
-        name: "camera",
-        transform: Float4x4.translate([0.0, 0.0, 8.0]),
-        children: false
-    });
-    cameraNode.currentPosition = Object.create (null);
-    scene.addChild (cameraNode);
-
-    let starsTransform = Float4x4.identity ();
+    // stars are in their own scene so they can be drawn to track the camera
     // rotate by 180 degrees on the x axis to account for our coordinate system, then Y by 180
     // degrees to orient correctly. then flip it inside out and scale it up
-    starsTransform = Float4x4.multiply (Float4x4.rotateX (Math.PI), starsTransform);
-    starsTransform = Float4x4.multiply (Float4x4.rotateY (Math.PI), starsTransform);
-    starsTransform = Float4x4.multiply (Float4x4.scale (-220), starsTransform);
+    let starsTransform = Float4x4.chain (
+        Float4x4.rotateX (Math.PI),
+        Float4x4.rotateY (Math.PI),
+        Float4x4.scale (-starSphereRadius)
+    );
     starsNode = Node.new ({
         name: "stars",
         transform: starsTransform,
         state: function (standardUniforms) {
-            context.disable (context.DEPTH_TEST);
-            context.depthMask (false);
             Program.get ("texture").use ();
             standardUniforms.TEXTURE_SAMPLER = "starfield";
             standardUniforms.OUTPUT_ALPHA_PARAMETER = starsNode.alpha;
         },
         shape: "ball"
     });
-    scene.addChild (starsNode);
-
-    let starfieldNode = Node.new ({
-        name: "starfield",
-        state: function (standardUniforms) {
-            Program.get ("texture").use ();
-            standardUniforms.TEXTURE_SAMPLER = "starfield";
-        },
-        shape: "ball",
-        children: false
-    });
-    starsNode.addChild (starfieldNode);
+    starsScene.addChild (starsNode);
 
     constellationsNode = Node.new ({
         name: "constellations",
@@ -256,7 +235,6 @@ let buildScene = function () {
     });
     starsNode.addChild (constellationsNode);
 
-    console.log ("Sun draw distance = " + sunDrawDistance);
     let sunNode = Node.new ({
         name: "sun",
         transform: Float4x4.identity (),
@@ -265,10 +243,10 @@ let buildScene = function () {
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
             standardUniforms.MODEL_COLOR = [255, 241, 234];
         },
-        shape: "sphere2",
+        shape: "ball",
         children: false
     });
-    scene.addChild (sunNode);
+    starsScene.addChild (sunNode);
 
     Thing.new ("sun", "sun", function (time) {
         // get the node
@@ -284,14 +262,28 @@ let buildScene = function () {
         standardUniforms.LIGHT_DIRECTION = solarSystem.sunDirection;
     });
 
+    // now the solar system
+    solarSystemScene = Node.new ({
+        state: function (standardUniforms) {
+            context.enable (context.DEPTH_TEST);
+            context.depthMask (true);
+        }
+    });
+
+    // add a root camera node
+    let cameraNode = Node.new ({
+        name: "camera",
+        transform: Float4x4.translate([0.0, 0.0, 8.0]),
+        children: false
+    });
+    cameraNode.currentPosition = Object.create (null);
+    solarSystemScene.addChild (cameraNode);
+
     let moonNode = Node.new ({
         name: "moon",
         transform: Float4x4.identity (),
         state: function (standardUniforms) {
-            context.enable (context.DEPTH_TEST);
-            context.depthMask (true);
             Program.get ("basic-texture").use ();
-            standardUniforms.AMBIENT_LIGHT_COLOR = [1.0, 1.0, 1.0];
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
             standardUniforms.TEXTURE_SAMPLER = "moon";
             standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
@@ -303,7 +295,7 @@ let buildScene = function () {
         shape: "ball-small",
         children: false
     });
-    scene.addChild (moonNode);
+    solarSystemScene.addChild (moonNode);
 
     Thing.new ("moon", "moon", function (time) {
         // get the node
@@ -318,13 +310,9 @@ let buildScene = function () {
 
     let worldNode = Node.new ({
         name: "world",
-        transform: Float4x4.identity (),
-        state: function (standardUniforms) {
-            context.enable (context.DEPTH_TEST);
-            context.depthMask (true);
-        }
+        transform: Float4x4.identity ()
     });
-    scene.addChild (worldNode);
+    solarSystemScene.addChild (worldNode);
 
     let useTest = false;
 
@@ -332,8 +320,6 @@ let buildScene = function () {
         name: "test",
         transform: Float4x4.identity (),
         state: function (standardUniforms) {
-            context.enable (context.DEPTH_TEST);
-            context.depthMask (true);
             Program.get ("hardlight").use ();
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
             standardUniforms.TEXTURE_SAMPLER = "earth-plate-carree";
@@ -384,8 +370,6 @@ let buildScene = function () {
             name: name,
             transform: geoTransform,
             state: function (standardUniforms) {
-                context.enable (context.DEPTH_TEST);
-                context.depthMask (true);
                 Program.get ("basic").use ();
                 standardUniforms.MODEL_COLOR = [1.0, 0.5, 0.5];
             },
@@ -465,8 +449,6 @@ let buildScene = function () {
         transform:Float4x4.identity,
         /*
         state: function (standardUniforms) {
-            context.enable (context.DEPTH_TEST);
-            context.depthMask (true);
             Program.get ("basic").use ();
             standardUniforms.MODEL_COLOR = [1.0, 0.5, 0.5];
         },
@@ -474,7 +456,7 @@ let buildScene = function () {
         */
         children:false
     });
-    scene.addChild (dscovrNode);
+    solarSystemScene.addChild (dscovrNode);
 
     Thing.new ("DSCOVR", "DSCOVR", function (time) {
         // get the node, and set the L1 transform - because our system is scaled around the
@@ -492,6 +474,17 @@ let onBodyLoad = function () {
         draw (deltaPosition);
     }), 0.01);
     Render.new ("render-canvas");
+
+    // a few common context details, clear color, backface culling, and blend modes
+    context.clearColor (0.0, 0.0, 0.0, 1.0);
+    context.enable (context.CULL_FACE);
+    context.cullFace (context.BACK);
+    context.blendFunc (context.SRC_ALPHA, context.ONE_MINUS_SRC_ALPHA);
+    context.enable (context.BLEND);
+
+    // a little bit of setup for lighting
+    standardUniforms.AMBIENT_LIGHT_COLOR = [1.0, 1.0, 1.0];
+    standardUniforms.LIGHT_COLOR = [1.0, 1.0, 1.0];
 
     showStarsCheckbox = document.getElementById ("showStarsCheckbox");
     showConstellationsCheckbox = document.getElementById ("showConstellationsCheckbox");
