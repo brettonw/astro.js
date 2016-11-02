@@ -36,16 +36,19 @@ let scaleRange = function (range, deadZone) {
 let currentTime;
 let geo_2016_11_1_1200 = computeJ2000 (utc (2016, 11, 1, 18, 0, 0));
 let eclipse2017 = computeJ2000 (utc (2017, 8, 21, 18, 0, 0));
-let discovrMoonTransit2015 = computeJ2000 (utc (2015, 7, 16, 0, 0, 0));
-
-let paused = false;
+let dscovrMoonTransit2015 = computeJ2000 (utc (2015, 7, 16, 0, 0, 0));
 
 let draw = function (deltaPosition) {
-    if (! paused) {
-        currentTime = discovrMoonTransit2015;//computeJ2000 (new Date ());
+    let timeType = document.getElementById ("timeTypeSelect").value;
+    switch (timeType) {
+        case "paused": break;
+        case "current": currentTime = computeJ2000 (new Date ()); break;
+        case "eclipse-2017": currentTime = eclipse2017; break;
+        case "DSCOVR-2015": currentTime = dscovrMoonTransit2015;
+        case "2016111-1200": currentTime = geo_2016_11_1_1200;
     }
-    let hourDelta = scaleRange(timeRange, 0.05) * 2.0;
-    let dayDelta = scaleRange(dayRange, 0.05) * 180.0;
+    let hourDelta = scaleRange(timeRange, 0.025) * 2.0;
+    let dayDelta = scaleRange(dayRange, 0.025) * 180.0;
     let displayTime = currentTime + dayDelta + hourDelta;
     Thing.updateAll(displayTime);
 
@@ -71,16 +74,17 @@ let draw = function (deltaPosition) {
     fovRangeValue = 1.0 - fovRangeValue;
     starsNode.alpha = fovRangeValue;
     fovRangeValue = 0.5 + (59.5 * fovRangeValue);
-
+    let fov = fovRangeValue;
+/*
     let framingRangeValue = framingRange.value;
     framingRangeValue *= 0.01;
     framingRangeValue = 0.1 + (0.9 * framingRangeValue);
 
-    let fov = fovRangeValue;
     let halfFov = fov / 2.0;
     let goalOpposite = 1.0 / framingRangeValue;
     let sinTheta = Math.sin(Utility.degreesToRadians (halfFov));
     let hypotenuse = goalOpposite / sinTheta;
+    */
     //console.log("Setting Projection at: " + hypotenuse);
     // I'm cheating with the near/far, I know the moon and anything orbiting it is the farthest out
     // we'll want to see on the near side, and the starfield on the far side
@@ -88,26 +92,41 @@ let draw = function (deltaPosition) {
     let nearPlane = Math.max (0.1, hypotenuse - 80.0);
     let farPlane = hypotenuse + 211.0;
     */
-    let nearPlane = 1;
-    let farPlane = 500;
+    let nearPlane = 0.1;
+    let farPlane = 620;
     standardUniforms.PROJECTION_MATRIX_PARAMETER = Float4x4.perspective (fov, context.viewportWidth / context.viewportHeight, nearPlane, farPlane);
+
+    let cameraSelect = document.getElementById ("cameraSelect").value;
+    let cameraSelectSplit = cameraSelect.split(";");
+    let cameraFrom = cameraSelectSplit[0];
+    let cameraTo = cameraSelectSplit[1];
+    let cameraUp = Utility.defaultValue (cameraSelectSplit[2], "y-up");
 
     let rootNode = Node.get ("root");
 
     // get the sun node, run a point through the transformation
-    let lookFromNode = Node.get ("camera");
+    let lookFromNode = Node.get (cameraFrom);
     let lookFromTransform = lookFromNode.getTransform (rootNode);
     let lookFromPoint = Float4x4.preMultiply ([0, 0, 0, 1], lookFromTransform);
     //console.log ("LOOK FROM: " + Float3.str (lookFromPoint));
 
     // get the earth node, run a point through the transformation
-    let lookAtNode = Node.get ("earth");
+    let lookAtNode = Node.get (cameraTo);
     let lookAtTransform = lookAtNode.getTransform (rootNode);
     let lookAtPoint = Float4x4.preMultiply ([0, 0, 0, 1], lookAtTransform);
     //console.log ("LOOK AT: " + Float3.str (lookAtPoint));
 
+    // figure the up vector
+    let up = [0, 1, 0];
+    if (cameraUp != "y-up") {
+        let upNode = Node.get (cameraUp);
+        let upTransform = upNode.getTransform (rootNode);
+        let upPoint = Float4x4.preMultiply ([0, 0, 0, 1], upTransform);
+        up = Float3.normalize (Float3.subtract (upPoint, lookFromPoint));
+    }
+
     // compute the view matrix
-    let viewMatrix = Float4x4.lookFromAt (lookFromPoint, lookAtPoint);
+    let viewMatrix = Float4x4.lookFromAt (lookFromPoint, lookAtPoint, up);
     //let viewMatrix = Float4x4.lookAlongAt (3, 50, Float3.subtract (lookAtPoint, lookFromPoint), lookAtPoint);
 
     // compute the view parameters as up or down, and left or right
@@ -131,7 +150,7 @@ let draw = function (deltaPosition) {
     // compute the camera position and set it in the standard uniforms
     let vmi = Float4x4.inverse (viewMatrix);
     standardUniforms.CAMERA_POSITION = [vmi[12], vmi[13], vmi[14]];
-    console.log ("CAMERA AT: " + Float3.str (standardUniforms.CAMERA_POSITION));
+    //console.log ("CAMERA AT: " + Float3.str (standardUniforms.CAMERA_POSITION));
 
     // update the visibility layers
     starsNode.enabled = showStarsCheckbox.checked;
@@ -141,6 +160,14 @@ let draw = function (deltaPosition) {
 
     // draw the scene
     scene.traverse (standardUniforms);
+};
+
+let selectCamera = function () {
+    let cameraSelect = document.getElementById ("cameraSelect").value;
+    let cameraSelectSplit = cameraSelect.split (";");
+    let cameraFov = Utility.defaultValue (cameraSelectSplit[3], 0.5);
+    fovRange.value = fovRange.max * cameraFov;
+    draw ([0, 0]);
 };
 
 let buildScene = function () {
@@ -192,7 +219,7 @@ let buildScene = function () {
     // degrees to orient correctly. then flip it inside out and scale it up
     starsTransform = Float4x4.multiply (Float4x4.rotateX (Math.PI), starsTransform);
     starsTransform = Float4x4.multiply (Float4x4.rotateY (Math.PI), starsTransform);
-    starsTransform = Float4x4.multiply (Float4x4.scale (-210), starsTransform);
+    starsTransform = Float4x4.multiply (Float4x4.scale (-310), starsTransform);
     starsNode = Node.new ({
         name: "stars",
         transform: starsTransform,
@@ -235,7 +262,7 @@ let buildScene = function () {
     let sunRadius = 695700.0;
     let earthOrbit = 149597870.700;
 
-    let sunDrawDistance = 200;
+    let sunDrawDistance = 300;
     let sunDistance = earthOrbit / earthRadius;
     let sunScale = (sunRadius / earthRadius);
     let sunNode = Node.new ({
@@ -461,28 +488,24 @@ let buildScene = function () {
     addGeoSatellite ("GOES15", -135.0);
     addGeoSatellite ("MTSAT3", 140.7);
 
-    // add Baltimore
-    let baltimoreTransform = Float4x4.chain (
-        //Float4x4.scale (0.01),
-        Float4x4.translate ([1.001, 0, 0]),
-        Float4x4.rotateZ (Utility.degreesToRadians (39.2904)),
-        Float4x4.rotateY (Utility.degreesToRadians (180 - 76.6122))
-    );
-    let baltimoreNode = Node.new ({
-        name: "baltimore",
-        transform: baltimoreTransform,
-        /*
-        state: function (standardUniforms) {
-            context.enable (context.DEPTH_TEST);
-            context.depthMask (true);
-            Program.get ("basic").use ();
-            standardUniforms.MODEL_COLOR = [1.0, 0.5, 0.5];
-        },
-        shape: "ball-small",
-        */
-        children: false
-    });
-    earthNode.addChild (baltimoreNode);
+    // add some geo markers
+    let addGeoMarker = function (name, radius, latitude, longitude) {
+        let geoMarkerTransform = Float4x4.chain (
+            Float4x4.scale (0.02),
+            Float4x4.translate ([radius, 0, 0]),
+            Float4x4.rotateZ (Utility.degreesToRadians (latitude)),
+            Float4x4.rotateY (Utility.degreesToRadians (180 + longitude))
+        );
+        let geoMarkerNode = Node.new ({
+            name: name,
+            transform: geoMarkerTransform,
+            children: false
+        });
+        earthNode.addChild (geoMarkerNode);
+    };
+    addGeoMarker ("baltimore", 1.001, 39.2904, -76.6122);
+    addGeoMarker ("b-z", 1.001, 39.2904, -76.0);
+    addGeoMarker ("b-y", 1.1, 39.2904, -76.6122);
 
     // clouds at 40km is a bit on the high side..., but it shows well
     let cloudHeight = (40 + earthRadius) / earthRadius;
@@ -573,24 +596,13 @@ let buildScene = function () {
         let sunDirection = Float3.normalize ([-I, K, J]);
 
         // DSCOVR is tracking the L1 point, and seems to be oriented with the geocentric coordinate
-        // frame. this is just an approximation of that position
-        let scaleL1 = 0.01; // in astronomical units, just an estimate
-        let hypL1 = scaleL1 * R;
-        let angleL1 = 10;
-        let adjL1 = cos (angleL1) * hypL1;
-        let oppL1 = sin (angleL1) * hypL1;
-
-        // compute the vectors to use for the positions
-        let up = [0, 1, 0];
-        let perp = Float3.cross (sunDirection, up);
-        up = Float3.cross (perp, sunDirection);
-
-        let positionL1 = Float3.add (Float3.scale (sunDirection, adjL1), Float3.scale (up, oppL1));
-
-        // scale position from AU to our earth centric coordinate frame
-        let auScale = (R * earthOrbit) / earthRadius;
-
-        let l1 = Float3.scale (positionL1, auScale);
+        // frame. this is just an approximation of that position, at 0.01 astronomical units. The
+        // actual satellite has a Lissajous orbit around the Earth/Sun line, varying approximately
+        // +/- 10 degrees over a 6 month period. I'm unable to find a detailed summary of how to
+        // compute the position of the satellite, so I'm just going with L1
+        let r = 0.01;
+        let l1 = Float3.scale (sunDirection, (r * R * earthOrbit) / earthRadius);
+        //console.log ("L1 = " + Float3.str (l1));
 
         // get the node
         let node = Node.get (this.node);

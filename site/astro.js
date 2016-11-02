@@ -251,3 +251,14 @@ let testJ2000 = function () {
 
     affirm ("check GMST again", computeGmstFromDate (utc (1995, 10, 1, 0, 0, 0)), 9.257, 1.0e-3);
 } ();
+
+// compute an approximation of L1/L2
+let lagrange1 = function () {
+    let M1 = 1.989e30;
+    let M2 = 5.972e24;
+    let R = 149597870.700;
+    let r_ = Math.pow (M2 / (3 * M1), 0.3333333);
+    let r = r_ * R;
+    return r;
+    console.log ("r_ = " + r_ + "; r = " + r + ";");
+} ();
