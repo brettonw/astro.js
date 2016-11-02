@@ -72,6 +72,4 @@ sub fetchForDate {
     }
 }
 
-for (my $i = 1; $i <= 30; $i++) {
-    fetchForDate (2016, 9, $i, 0);
-}
+fetchForDate (2016, 11, 1, 12);

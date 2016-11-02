@@ -32,13 +32,17 @@ let scaleRange = function (range, deadZone) {
     return (Math.sign (rangeValue) * rawOffset) / rangeMid;
 };
 
-let currentTime = computeJ2000 (new Date ());
+// interesting points in time
+let currentTime;
+let geo_2016_11_1_1200 = computeJ2000 (utc (2016, 11, 1, 18, 0, 0));
+let eclipse2017 = computeJ2000 (utc (2017, 8, 21, 18, 0, 0));
+let discovrMoonTransit2015 = computeJ2000 (utc (2015, 7, 16, 0, 0, 0));
+
 let paused = false;
 
 let draw = function (deltaPosition) {
     if (! paused) {
-        //currentTime = computeJ2000 (new Date ());
-        currentTime - computeJ2000(new Date (2017, 7, 21))
+        currentTime = discovrMoonTransit2015;//computeJ2000 (new Date ());
     }
     let hourDelta = scaleRange(timeRange, 0.05) * 2.0;
     let dayDelta = scaleRange(dayRange, 0.05) * 180.0;
@@ -91,19 +95,20 @@ let draw = function (deltaPosition) {
     let rootNode = Node.get ("root");
 
     // get the sun node, run a point through the transformation
-    let lookFromNode = Node.get ("sun");
+    let lookFromNode = Node.get ("camera");
     let lookFromTransform = lookFromNode.getTransform (rootNode);
-    let lookFromPoint = Float4x4.preMultiply ([0,0,0,1], lookFromTransform);
-    console.log ("LOOK FROM: " + Float3.str (lookFromPoint));
+    let lookFromPoint = Float4x4.preMultiply ([0, 0, 0, 1], lookFromTransform);
+    //console.log ("LOOK FROM: " + Float3.str (lookFromPoint));
 
     // get the earth node, run a point through the transformation
     let lookAtNode = Node.get ("earth");
     let lookAtTransform = lookAtNode.getTransform (rootNode);
-    let lookAtPoint = Float4x4.preMultiply ([0,0,0,1], lookAtTransform);
-    console.log ("LOOK AT: " + Float3.str (lookAtPoint));
+    let lookAtPoint = Float4x4.preMultiply ([0, 0, 0, 1], lookAtTransform);
+    //console.log ("LOOK AT: " + Float3.str (lookAtPoint));
 
     // compute the view matrix
     let viewMatrix = Float4x4.lookFromAt (lookFromPoint, lookAtPoint);
+    //let viewMatrix = Float4x4.lookAlongAt (3, 50, Float3.subtract (lookAtPoint, lookFromPoint), lookAtPoint);
 
     // compute the view parameters as up or down, and left or right
     /*
@@ -126,6 +131,7 @@ let draw = function (deltaPosition) {
     // compute the camera position and set it in the standard uniforms
     let vmi = Float4x4.inverse (viewMatrix);
     standardUniforms.CAMERA_POSITION = [vmi[12], vmi[13], vmi[14]];
+    console.log ("CAMERA AT: " + Float3.str (standardUniforms.CAMERA_POSITION));
 
     // update the visibility layers
     starsNode.enabled = showStarsCheckbox.checked;
@@ -172,6 +178,14 @@ let buildScene = function () {
             standardUniforms.LIGHT_COLOR = [1.0, 1.0, 1.0];
         }
     });
+
+    // add a root camera node
+    let cameraNode = Node.new ({
+        name: "camera",
+        transform: Float4x4.translate([0.0, 0.0, 8.0]),
+        children: false
+    });
+    scene.addChild (cameraNode);
 
     let starsTransform = Float4x4.identity ();
     // rotate by 180 degrees on the x axis to account for our coordinate system, then Y by 180
@@ -270,13 +284,13 @@ let buildScene = function () {
         // I am using a right handed coordinate system where X is positive to the left, Y positive
         // up, and Z positive into the view
         let sunDirection = Float3.normalize ([-I, K, J]);
-        console.log ("SUN: " + Float3.str (sunDirection));
+        //console.log ("SUN: " + Float3.str (sunDirection));
         let sunPosition = Float3.scale (sunDirection, sunDrawDistance);
 
         // compute the relative scale of the sun to reflect the changing distance in our orbit
         sunScale = (sunRadius / earthRadius) * (sunDrawDistance / (sunDistance * R)); // approx 0.93
 
-        // compute the position of the sun, and update the lighting conversation
+        // compute the position of the sun, and update the lighting direction
         node.transform = Float4x4.multiply (Float4x4.scale (sunScale), Float4x4.translate (sunPosition));
         standardUniforms.LIGHT_DIRECTION = sunDirection;
     });
@@ -408,10 +422,67 @@ let buildScene = function () {
                 .setSpecularMapTxSampler ("earth-specular-map");
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
         },
-        shape: "ball",
-        children: false
+        shape: "ball"
     });
     earthRenderNode.addChild (earthNode);
+
+    // add geostationary satellites (orbit over equator at altitude of ~35,780 km)
+    // * MSG _MSG3_ "Meteosat 2nd Generation (aka SEVIRI)" (000.0E) (infrared channels 4)
+    // * MET _MET7_ "Meteosat VISSR (aka IODC)" (057.0E) (infrared channel 2)
+    // * GOES _GOES13_ "US GOES East" (075.0W) (infrared channel 2)
+    // * GOES _GOES15_ "US GOES West" (135.0W) (infrared channel 2)
+    // * MTSAT _MTSAT3_ "Himawari 8" (140.7E)
+    let addGeoSatellite = function (name, longitude) {
+        let geoAltitude = 35780 / earthRadius;
+        let geoTransform = Float4x4.chain (
+            Float4x4.scale (0.01),
+            Float4x4.translate ([geoAltitude, 0, 0]),
+            // very slight inclinations
+            //Float4x4.rotateZ (Utility.degreesToRadians (0.18)),
+            Float4x4.rotateY (Utility.degreesToRadians (180 + longitude))
+        );
+        let geoNode = Node.new ({
+            name: name,
+            transform: geoTransform,
+            state: function (standardUniforms) {
+                context.enable (context.DEPTH_TEST);
+                context.depthMask (true);
+                Program.get ("basic").use ();
+                standardUniforms.MODEL_COLOR = [1.0, 0.5, 0.5];
+            },
+            shape: "ball-small",
+            children: false
+        });
+        earthRenderNode.addChild (geoNode);
+    };
+    addGeoSatellite ("MSG3", 0.0);
+    addGeoSatellite ("MET7", 57.0);
+    addGeoSatellite ("GOES13", -75.0);
+    addGeoSatellite ("GOES15", -135.0);
+    addGeoSatellite ("MTSAT3", 140.7);
+
+    // add Baltimore
+    let baltimoreTransform = Float4x4.chain (
+        //Float4x4.scale (0.01),
+        Float4x4.translate ([1.001, 0, 0]),
+        Float4x4.rotateZ (Utility.degreesToRadians (39.2904)),
+        Float4x4.rotateY (Utility.degreesToRadians (180 - 76.6122))
+    );
+    let baltimoreNode = Node.new ({
+        name: "baltimore",
+        transform: baltimoreTransform,
+        /*
+        state: function (standardUniforms) {
+            context.enable (context.DEPTH_TEST);
+            context.depthMask (true);
+            Program.get ("basic").use ();
+            standardUniforms.MODEL_COLOR = [1.0, 0.5, 0.5];
+        },
+        shape: "ball-small",
+        */
+        children: false
+    });
+    earthNode.addChild (baltimoreNode);
 
     // clouds at 40km is a bit on the high side..., but it shows well
     let cloudHeight = (40 + earthRadius) / earthRadius;
@@ -452,6 +523,78 @@ let buildScene = function () {
         //let D = floor (time);
         let gmst = computeGmstFromJ2000 (time);
         node.transform = Float4x4.rotateY (Utility.degreesToRadians (gmst));
+    });
+
+    let dscovrNode = Node.new ({
+        name: "DSCOVR",
+        transform:Float4x4.identity,
+        /*
+        state: function (standardUniforms) {
+            context.enable (context.DEPTH_TEST);
+            context.depthMask (true);
+            Program.get ("basic").use ();
+            standardUniforms.MODEL_COLOR = [1.0, 0.5, 0.5];
+        },
+        shape: "ball-small",
+        */
+        children:false
+    });
+    scene.addChild (dscovrNode);
+
+    Thing.new ("DSCOVR", "DSCOVR", function (time) {
+        // cos and sin routines that work on degrees (unwraps intrinsically)
+        let cos = Utility.cos;
+        let sin = Utility.sin;
+
+        // compute the julian century
+        let jc = time / 36525;
+
+        // compute the mean longitude and mean anomaly of the sun (degrees)
+        let meanLongitude = 280.460 + (36000.77 * jc);
+        let meanAnomaly = 357.5277233 + (35999.05034 * jc);
+
+        // compute the ecliptic longitude of the sun (degrees)
+        let eclipticLongitude = meanLongitude + (1.914666471 * sin (meanAnomaly)) + (0.019994643 * sin (meanAnomaly + meanAnomaly));
+
+        // compute the distance to the sun in astronomical units
+        let R = 1.000140612 - (0.016708617 * cos (meanAnomaly)) - (0.000139589 * cos (meanAnomaly + meanAnomaly));
+
+        // compute the ecliptic obliquity (degrees)
+        let eclipticObliquity = 23.439291 - (0.0130042 * jc);
+
+        // compute geocentric equatorial coordinates
+        let sinEclipticLongitude = sin (eclipticLongitude);
+        let I = R * cos (eclipticLongitude);
+        let J = R * cos (eclipticObliquity) * sinEclipticLongitude;
+        let K = R * sin (eclipticObliquity) * sinEclipticLongitude;
+
+        // I am using a right handed coordinate system where X is positive to the left, Y positive
+        // up, and Z positive into the view
+        let sunDirection = Float3.normalize ([-I, K, J]);
+
+        // DSCOVR is tracking the L1 point, and seems to be oriented with the geocentric coordinate
+        // frame. this is just an approximation of that position
+        let scaleL1 = 0.01; // in astronomical units, just an estimate
+        let hypL1 = scaleL1 * R;
+        let angleL1 = 10;
+        let adjL1 = cos (angleL1) * hypL1;
+        let oppL1 = sin (angleL1) * hypL1;
+
+        // compute the vectors to use for the positions
+        let up = [0, 1, 0];
+        let perp = Float3.cross (sunDirection, up);
+        up = Float3.cross (perp, sunDirection);
+
+        let positionL1 = Float3.add (Float3.scale (sunDirection, adjL1), Float3.scale (up, oppL1));
+
+        // scale position from AU to our earth centric coordinate frame
+        let auScale = (R * earthOrbit) / earthRadius;
+
+        let l1 = Float3.scale (positionL1, auScale);
+
+        // get the node
+        let node = Node.get (this.node);
+        node.transform = Float4x4.translate (l1);
     });
 
     //LogLevel.set (LogLevel.TRACE);
