@@ -4,11 +4,7 @@ const sunRadius = 695700.0;
 const earthOrbit = 149597870.700;
 
 const sunDistance = earthOrbit / earthRadius;
-
-// compute the drawDistance so that the actual sun scale is usually about 1
-const sunDrawDistance = (sunDistance * earthRadius) / sunRadius;
-console.log ("Sun draw distance = " + sunDrawDistance);
-const starSphereRadius = sunDrawDistance + 1.0;
+const starSphereRadius = sunDistance + 1.0;
 
 const moonRadius = 1737.1;
 //let moonOrbit = 384405.0;

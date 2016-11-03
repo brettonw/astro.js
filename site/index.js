@@ -10,7 +10,7 @@ let showConstellationsCheckbox;
 let showCloudsCheckbox;
 let showAtmosphereCheckbox;
 let zoomRange;
-let framingRange;
+let fovRange;
 let timeRange;
 let dayRange;
 
@@ -63,17 +63,18 @@ let draw = function (deltaPosition) {
     Thing.updateAll(displayTime);
 
     // XXX convert from our display time to a Javascript Date
-    timeDisplay.innerHTML = "JD: " + displayTime.toFixed(4) + " (" + currentTime.toFixed (4) + ", " + (dayDelta + hourDelta).toFixed (4) + ")";
+    timeDisplay.innerHTML = displayTime.toFixed(4) + " (" + currentTime.toFixed (4) + ", " + (dayDelta + hourDelta).toFixed (4) + ")";
 
-    // set up the projection matrix (earth radius is 1 and we want it to occupy about 75% of the
-    // view in the vertical direction - the view is probably wider than that)
+    // set up the view parameters
     let zoomRangeValue = zoomRange.value;
     zoomRangeValue *= 0.01;
-    zoomRangeValue *= zoomRangeValue;
-
     let zoomRangeValueInverse = 1.0 - zoomRangeValue;
-    starsNode.alpha = zoomRangeValueInverse;
-    let fov = 0.5 + (59.5 * zoomRangeValueInverse);
+
+    let fovRangeValue = fovRange.value;
+    fovRangeValue *= 0.01;
+    let fovRangeValueInverse = 1.0 - fovRangeValue;
+    starsNode.alpha = Math.sqrt (fovRangeValueInverse);
+    let fov = 1.0 + (59.0 * fovRangeValueInverse);
 
     // get the selected camera and tease out the parameters for it
     let cameraSelect = document.getElementById ("cameraSelect").value;
@@ -105,11 +106,11 @@ let draw = function (deltaPosition) {
         // XXX for now, we assume the bound on the observed object is 1, but I need to get bounds
         // XXX on the nodes to be really effective
         let boundRadius = 1.0;
-        let goalOpposite = boundRadius / zoomRangeValue;
+        let goalOpposite = boundRadius / ((zoomRangeValue * 0.9) + 0.1);
         let sinTheta = Utility.sin (fov / 2.0);
-        let hypotenuse = Math.min (goalOpposite / sinTheta, 100);
-        //console.log ("Hypotenuse = " + hypotenuse);
-        hypotenuse = Math.min (hypotenuse, 70);
+        let hypotenuse = goalOpposite / sinTheta;
+        console.log ("Hypotenuse = " + hypotenuse);
+        //hypotenuse = 10;
 
         // setup the transformation matrix
         lookFromNode.transform = Float4x4.chain (
@@ -151,7 +152,7 @@ let draw = function (deltaPosition) {
     let starsViewMatrix = Float4x4.copy (viewMatrix);
     starsViewMatrix[12] = starsViewMatrix[13] = starsViewMatrix[14] = 0.0;
     standardUniforms.CAMERA_POSITION = [0, 0, 0];
-    standardUniforms.PROJECTION_MATRIX_PARAMETER = Float4x4.perspective (fov, context.viewportWidth / context.viewportHeight, 1, starSphereRadius + 1);
+    standardUniforms.PROJECTION_MATRIX_PARAMETER = Float4x4.perspective (fov, context.viewportWidth / context.viewportHeight, 1000, starSphereRadius * 1.1);
     standardUniforms.VIEW_MATRIX_PARAMETER = starsViewMatrix;
     standardUniforms.MODEL_MATRIX_PARAMETER = Float4x4.identity ();
     starsScene.traverse (standardUniforms);
@@ -183,7 +184,7 @@ let selectCamera = function () {
     let cameraSelect = document.getElementById ("cameraSelect").value;
     let cameraSelectSplit = cameraSelect.split (";");
     let cameraFov = Utility.defaultValue (cameraSelectSplit[3], 0.5);
-    zoomRange.value = zoomRange.max * cameraFov;
+    fovRange.value = fovRange.max * cameraFov;
     draw ([0, 0]);
 };
 
@@ -252,10 +253,11 @@ let buildScene = function () {
         // get the node
         let node = Node.get (this.node);
 
-        let sunPosition = Float3.scale (solarSystem.sunDirection, sunDrawDistance);
+        let R = sunDistance * solarSystem.sunR;
+        let sunPosition = Float3.scale (solarSystem.sunDirection, R);
 
         // compute the relative scale of the sun to reflect the changing distance in our orbit
-        let sunScale = (sunRadius / earthRadius) * (sunDrawDistance / (sunDistance * solarSystem.sunR)); // approx 1
+        let sunScale = (sunRadius / earthRadius) * (sunDistance / R);
 
         // compute the position of the sun, and update the lighting direction
         node.transform = Float4x4.multiply (Float4x4.scale (sunScale), Float4x4.translate (sunPosition));
@@ -491,7 +493,7 @@ let onBodyLoad = function () {
     showCloudsCheckbox = document.getElementById("showCloudsCheckbox");
     showAtmosphereCheckbox = document.getElementById("showAtmosphereCheckbox");
     zoomRange = document.getElementById("zoomRange");
-    framingRange = document.getElementById("framingRange");
+    fovRange = document.getElementById("fovRange");
     timeRange = document.getElementById ("timeRange");
     dayRange = document.getElementById ("dayRange");
     timeDisplay = document.getElementById("timeDisplay");

@@ -22,48 +22,89 @@
         <input type="range" id="timeRange" style="width:854px;" min="0" max="600" step="1" value="300" oninput="draw ([0, 0]);">
         <input type="range" id="dayRange" style="width:854px;" min="0" max="600" step="1" value="300" oninput="draw ([0, 0]);">
     </div>
-    <div style="width:200px;margin:0;border:0;padding:0;display:inline-block;vertical-align:top;">
-        <span id="timeDisplay">XXX:XX:XX</span>
-        <select id="timeTypeSelect" onchange="draw ([0, 0]);">
-            <option value="paused">Paused</option>
-            <option value="current" selected>Current Time</option>
-            <option value="eclipse-2017">2017 Solar Eclipse</option>
-            <option value="DSCOVR-2015">DSCOVR Moon Transit 2015</option>
-            <option value="2016111-1200">2016111-1200</option>
-        </select>
-        <br>
-        <input type="checkbox" id="showStarsCheckbox" onchange="draw ([0, 0]);" CHECKED> Stars<br>
-        <input type="checkbox" id="showConstellationsCheckbox" onchange="draw ([0, 0]);"> Constellations<br>
-        <input type="checkbox" id="showCloudsCheckbox" onchange="draw ([0, 0]);" CHECKED> Clouds<br>
-        <input type="checkbox" id="showAtmosphereCheckbox" onchange="draw ([0, 0]);" CHECKED> Atmosphere<br>
-        <input type="range" id="zoomRange" min="0" max="100" step="1" value="50" oninput="draw ([0, 0]);"> Zoom<br>
-        <!--
-        <input type="range" id="framingRange" min="0" max="100" step="1" value="50" oninput="draw ([0, 0]);"> Framing<br>
-        -->
-        <select id="cameraSelect" onchange="selectCamera ();">
-            <option value="camera;earth" selected>Orbit Earth</option>
-            <option value="camera;moon">Orbit Moon</option>
-            <option value="" disabled="disabled">—————————————</option>
-            <option value="moon;earth">Moon at Earth</option>
-            <option value="sun;earth">Sun at Earth</option>
-            <option value="" disabled="disabled">—————————————</option>
-            <option value="DSCOVR;earth;y-up;0.99">DSCOVR (L1) at Earth</option>
-            <option value="MSG3;earth;y-up;0.75">MSG3 at Earth</option>
-            <option value="MET7;earth;y-up;0.75">MET7 at Earth</option>
-            <option value="GOES13;earth;y-up;0.75">GOES13 at Earth</option>
-            <option value="GOES15;earth;y-up;0.75">GOES15 at Earth</option>
-            <option value="MTSAT3;earth;y-up;0.75">MTSAT3 at Earth</option>
-            <option value="" disabled="disabled">—————————————</option>
-            <option value="earth;moon">Earth at Moon</option>
-            <option value="baltimore;moon">Baltimore at Moon</option>
-            <option value="sun;moon">Sun at Moon</option>
-            <option value="" disabled="disabled">—————————————</option>
-            <option value="earth;sun">Earth at Sun</option>
-            <option value="baltimore;sun">Baltimore at Sun</option>
-            <option value="moon;sun">Moon at Sun</option>
-            <option value="" disabled="disabled">—————————————</option>
-            <option value="baltimore;b-z;b-y;0">Baltimore Sky</option>
-        </select>
+    <div style="width:300px;margin:0;border:0;padding:0;display:inline-block;vertical-align:top;">
+        <table>
+            <tr>
+                <td>J2000</td>
+                <td style="text-align: right;"><span id="timeDisplay">XXX:XX:XX</span></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td style="text-align: right;">
+                    <select id="timeTypeSelect" onchange="draw ([0, 0]);">
+                        <option value="paused">Paused</option>
+                        <option value="current" selected>Current Time</option>
+                        <option value="eclipse-2017">2017 Solar Eclipse</option>
+                        <option value="DSCOVR-2015">DSCOVR Moon Transit 2015</option>
+                        <option value="2016111-1200">2016111-1200</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Stars</td>
+                <td style="text-align: right;">
+                    <input type="checkbox" id="showStarsCheckbox" onchange="draw ([0, 0]);" CHECKED>
+                </td>
+            </tr>
+            <tr>
+                <td>Constellations</td>
+                <td style="text-align: right;">
+                    <input type="checkbox" id="showConstellationsCheckbox" onchange="draw ([0, 0]);">
+                </td>
+            </tr>
+            <tr>
+                <td>Clouds</td>
+                <td style="text-align: right;">
+                    <input type="checkbox" id="showCloudsCheckbox" onchange="draw ([0, 0]);" CHECKED>
+                </td>
+            </tr>
+            <tr>
+                <td>Atmosphere</td>
+                <td style="text-align: right;">
+                    <input type="checkbox" id="showAtmosphereCheckbox" onchange="draw ([0, 0]);" CHECKED>
+                </td>
+            </tr>
+            <tr>
+                <td>Zoom</td>
+                <td style="text-align: right;">
+                    <input type="range" id="zoomRange" min="0" max="100" step="1" value="50" oninput="draw ([0, 0]);">
+                </td>
+            </tr>
+            <tr>
+                <td>Field of View</td>
+                <td style="text-align: right;">
+                    <input type="range" id="fovRange" min="0" max="100" step="1" value="50" oninput="draw ([0, 0]);">
+                </td>
+            </tr>
+            <tr>
+                <td>Camera</td>
+                <td style="text-align: right;">
+                    <select id="cameraSelect" onchange="selectCamera ();">
+                        <option value="camera;earth" selected>Orbit Earth</option>
+                        <option value="camera;moon">Orbit Moon</option>
+                        <option value="" disabled="disabled">—————————————</option>
+                        <option value="moon;earth;y-up;0.90">Moon at Earth</option>
+                        <option value="" disabled="disabled">—————————————</option>
+                        <option value="DSCOVR;earth;y-up;0.99">DSCOVR (L1) at Earth</option>
+                        <option value="MSG3;earth;y-up;0.60">MSG3 at Earth</option>
+                        <option value="MET7;earth;y-up;0.60">MET7 at Earth</option>
+                        <option value="GOES13;earth;y-up;0.60">GOES13 at Earth</option>
+                        <option value="GOES15;earth;y-up;0.60">GOES15 at Earth</option>
+                        <option value="MTSAT3;earth;y-up;0.60">MTSAT3 at Earth</option>
+                        <option value="" disabled="disabled">—————————————</option>
+                        <option value="DSCOVR;moon;y-up;1.0">DSCOVR (L1) at Moon</option>
+                        <option value="earth;moon;y-up;1.00">Earth at Moon</option>
+                        <option value="baltimore;moon;y-up;1.00">Baltimore at Moon</option>
+                        <option value="" disabled="disabled">—————————————</option>
+                        <option value="earth;sun;y-up;1.00">Earth at Sun</option>
+                        <option value="baltimore;sun;y-up;1.00">Baltimore at Sun</option>
+                        <option value="moon;sun;y-up;1.00">Moon at Sun</option>
+                        <option value="" disabled="disabled">—————————————</option>
+                        <option value="baltimore;b-z;b-y;0.00">Baltimore Sky</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
     </div>
 </div>
 <div style="margin-left:40px;" id="footer">
