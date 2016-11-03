@@ -471,10 +471,23 @@ let buildScene = function () {
     draw ([0, 0]);
 };
 
+let mouseWheel = function (event) {
+    console.log ("e: " + event.wheelDelta);
+    if (event.wheelDelta > 0) {
+        fovRange.stepUp (1);
+    } else if (event.wheelDelta < 0) {
+        fovRange.stepDown (1);
+    }
+    draw ([0, 0]);
+    return (event.returnValue = false);
+};
+
 let onBodyLoad = function () {
     MouseTracker.new ("render-canvas", OnReady.new (null, function (deltaPosition) {
         draw (deltaPosition);
     }), 0.01);
+    document.addEventListener ("mousewheel", mouseWheel, false);
+
     Render.new ("render-canvas");
 
     // a few common context details, clear color, backface culling, and blend modes
