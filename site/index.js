@@ -5,12 +5,15 @@ let solarSystemScene;
 
 let standardUniforms = Object.create(null);
 
+let timeType;
 let showStarsCheckbox;
 let showConstellationsCheckbox;
 let showCloudsCheckbox;
 let showAtmosphereCheckbox;
 let zoomRange;
 let fovRange;
+let cameraType;
+
 let timeRange;
 let dayRange;
 
@@ -48,8 +51,7 @@ let draw = function (deltaPosition) {
     refreshTimeoutId = setTimeout(function () { draw ([0, 0]); }, 1000 * 60);
 
     // determine how to set the clock
-    let timeType = document.getElementById ("timeTypeSelect").value;
-    switch (timeType) {
+    switch (timeType.value) {
         case "paused": break;
         case "current": currentTime = computeJ2000 (new Date ()); break;
         case "eclipse-2017": currentTime = eclipse2017; break;
@@ -77,8 +79,7 @@ let draw = function (deltaPosition) {
     let fov = 1.0 + (59.0 * fovRangeValueInverse);
 
     // get the selected camera and tease out the parameters for it
-    let cameraSelect = document.getElementById ("cameraSelect").value;
-    let cameraSelectSplit = cameraSelect.split(";");
+    let cameraSelectSplit = cameraType.value.split(";");
     let cameraFrom = cameraSelectSplit[0];
     let lookFromNode = Node.get (cameraFrom);
     let cameraTo = cameraSelectSplit[1];
@@ -179,9 +180,45 @@ let draw = function (deltaPosition) {
     solarSystemScene.traverse (standardUniforms);
 };
 
+let lastTimeType = "current";
+let selectTime = function () {
+    let newTimeType = timeType.value;
+    let newTimeTypeIndex = timeType.selectedIndex;
+    let reset = false;
+    switch (newTimeType) {
+        case "reset":
+            // reset the time sliders and bounce back to whatever the setting was
+            reset = true;
+            timeType.value = lastTimeType;
+            break;
+        case "current":
+            // if we come here from anything but paused, we want to reset the time sliders
+            reset = (lastTimeType != "current");
+            lastTimeType = newTimeType;
+            break;
+        case "paused":
+            // if it wasn't current, bounce back to whatever the setting was
+            if (lastTimeType != "current") {
+                timeType.value = lastTimeType;
+            }
+            break;
+        default:
+            // no matter where we come from, reset the time sliders
+            reset = true;
+            lastTimeType = newTimeType;
+            break;
+    }
+
+    if (reset) {
+        timeRange.value = timeRange.max / 2;
+        dayRange.value = dayRange.max / 2;
+    }
+
+    draw ([0, 0]);
+};
+
 let selectCamera = function () {
-    let cameraSelect = document.getElementById ("cameraSelect").value;
-    let cameraSelectSplit = cameraSelect.split (";");
+    let cameraSelectSplit = cameraType.value.split (";");
     let cameraFov = Utility.defaultValue (cameraSelectSplit[3], 0.5);
     fovRange.value = fovRange.max * cameraFov;
     draw ([0, 0]);
@@ -189,10 +226,6 @@ let selectCamera = function () {
 
 
 let buildScene = function () {
-    makeRevolve ("cylinder",
-        [[1.0, 1.0], [1.0, -1.0], [1.0, -1.0], [0.8, -1.0], [0.8, -1.0], [0.8, 1.0], [0.8, 1.0], [1.0, 1.0]],
-        [[1.0, 0.0], [1.0, 0.0], [0.0, -1.0], [0.0, -1.0], [-1.0, 0.0], [-1.0, 0.0], [0.0, 1.0], [0.0, 1.0]],
-        36);
     makeBall ("ball", 72);
     makeBall ("ball-small", 36);
 
@@ -437,10 +470,6 @@ let buildScene = function () {
     Thing.new ("world", "world", function (time) {
         // get the node
         let node = Node.get (this.node);
-
-
-        // where D is the number of UT1 days since J2000
-        //let D = floor (time);
         let gmst = computeGmstFromJ2000 (time);
         node.transform = Float4x4.rotateY (Utility.degreesToRadians (gmst));
     });
@@ -466,8 +495,7 @@ let buildScene = function () {
         node.transform = Float4x4.translate (Float3.scale (solarSystem.L1, 0.5));
     });
 
-    //LogLevel.set (LogLevel.TRACE);
-    draw ([0, 0]);
+    selectTime();
 };
 
 let mouseWheel = function (event) {
@@ -500,15 +528,17 @@ let onBodyLoad = function () {
     standardUniforms.AMBIENT_LIGHT_COLOR = [1.0, 1.0, 1.0];
     standardUniforms.LIGHT_COLOR = [1.0, 1.0, 1.0];
 
+    timeDisplay = document.getElementById("timeDisplay");
+    timeType = document.getElementById ("timeTypeSelect");
     showStarsCheckbox = document.getElementById ("showStarsCheckbox");
     showConstellationsCheckbox = document.getElementById ("showConstellationsCheckbox");
     showCloudsCheckbox = document.getElementById("showCloudsCheckbox");
     showAtmosphereCheckbox = document.getElementById("showAtmosphereCheckbox");
     zoomRange = document.getElementById("zoomRange");
     fovRange = document.getElementById("fovRange");
+    cameraType = document.getElementById ("cameraTypeSelect");
     timeRange = document.getElementById ("timeRange");
     dayRange = document.getElementById ("dayRange");
-    timeDisplay = document.getElementById("timeDisplay");
 
     // load the basic shaders from the original soure
     LoaderShader.new ("http://webgl-js.azurewebsites.net/site/shaders/@.glsl")
@@ -544,5 +574,4 @@ let onBodyLoad = function () {
 
                 }));
         }));
-
 };

@@ -31,9 +31,12 @@
             <tr>
                 <td></td>
                 <td style="text-align: right;">
-                    <select id="timeTypeSelect" onchange="draw ([0, 0]);">
+                    <select id="timeTypeSelect" onchange="selectTime ();">
+                        <option value="reset" selected>Reset</option>
+                        <option value="" disabled="disabled">—————————————</option>
+                        <option value="current">Current Time</option>
                         <option value="paused">Paused</option>
-                        <option value="current" selected>Current Time</option>
+                        <option value="" disabled="disabled">—————————————</option>
                         <option value="eclipse-2017">2017 Solar Eclipse</option>
                         <option value="DSCOVR-2015">DSCOVR Moon Transit 2015</option>
                         <option value="2016111-1200">2016111-1200</option>
@@ -79,7 +82,7 @@
             <tr>
                 <td>Camera</td>
                 <td style="text-align: right;">
-                    <select id="cameraSelect" onchange="selectCamera ();">
+                    <select id="cameraTypeSelect" onchange="selectCamera ();">
                         <option value="camera;earth" selected>Orbit Earth</option>
                         <option value="camera;moon">Orbit Moon</option>
                         <option value="" disabled="disabled">—————————————</option>
