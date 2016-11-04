@@ -79,12 +79,13 @@ let draw = function (deltaPosition) {
     let fov = 1.0 + (59.0 * fovRangeValueInverse);
 
     // get the selected camera and tease out the parameters for it
-    let cameraSelectSplit = cameraType.value.split(";");
-    let cameraFrom = cameraSelectSplit[0];
+    let cameraTypeValue = JSON.parse (cameraType.value);
+    let cameraViewType = cameraTypeValue.type;
+    let cameraFrom = cameraTypeValue.from;
     let lookFromNode = Node.get (cameraFrom);
-    let cameraTo = cameraSelectSplit[1];
-    let lookAtNode = Node.get (cameraTo);
-    let cameraUp = Utility.defaultValue (cameraSelectSplit[2], "y-up");
+    let cameraAt = cameraTypeValue.at;
+    let lookAtNode = Node.get (cameraAt);
+    let cameraUp = Utility.defaultValue (cameraTypeValue.up, "y-up");
 
     // get the "to" node origin
     let lookAtTransform = lookAtNode.getTransform ();
@@ -93,15 +94,15 @@ let draw = function (deltaPosition) {
 
     // update the orbit camera if we should
     if (cameraFrom == "camera") {
-        if (!(cameraTo in lookFromNode.currentPosition)) {
-            lookFromNode.currentPosition[cameraTo] = [0, 0];
+        if (!(cameraAt in lookFromNode.currentPosition)) {
+            lookFromNode.currentPosition[cameraAt] = [0, 0];
         }
 
         // update the current controller position and clamp or wrap accordingly
-        let currentPosition = Float2.add (lookFromNode.currentPosition[cameraTo], deltaPosition);
+        let currentPosition = Float2.add (lookFromNode.currentPosition[cameraAt], deltaPosition);
         currentPosition[0] = Utility.unwind (currentPosition[0], 2);
         currentPosition[1] = Math.max (Math.min (currentPosition[1], 0.9), -0.9);
-        lookFromNode.currentPosition[cameraTo] = currentPosition;
+        lookFromNode.currentPosition[cameraAt] = currentPosition;
 
         // compute a few image composition values based off ensuring a sphere is fully in view
         // XXX for now, we assume the bound on the observed object is 1, but I need to get bounds
@@ -218,8 +219,8 @@ let selectTime = function () {
 };
 
 let selectCamera = function () {
-    let cameraSelectSplit = cameraType.value.split (";");
-    let cameraFov = Utility.defaultValue (cameraSelectSplit[3], 0.5);
+    let cameraTypeValue = JSON.parse (cameraType.value);
+    let cameraFov = Utility.defaultValue (cameraTypeValue.fov, 0.5);
     fovRange.value = fovRange.max * cameraFov;
     draw ([0, 0]);
 };

@@ -83,27 +83,27 @@
                 <td>Camera</td>
                 <td style="text-align: right;">
                     <select id="cameraTypeSelect" onchange="selectCamera ();">
-                        <option value="camera;earth" selected>Orbit Earth</option>
-                        <option value="camera;moon">Orbit Moon</option>
+                        <option value='{"type":"portrait", "from":"camera", "at":"earth", "up":"y-up", "fov":0.5}' selected>Orbit Earth</option>
+                        <option value='{"type":"portrait", "from":"camera", "at":"moon", "up":"y-up", "fov":0.5}'>Orbit Moon</option>
                         <option value="" disabled="disabled">—————————————</option>
-                        <option value="moon;earth;y-up;0.90">Moon at Earth</option>
+                        <option value='{"type":"fixed", "from":"moon", "at":"earth", "up":"y-up", "fov":0.9}'>Moon at Earth</option>
                         <option value="" disabled="disabled">—————————————</option>
-                        <option value="DSCOVR;earth;y-up;0.99">DSCOVR (L1) at Earth</option>
-                        <option value="MSG3;earth;y-up;0.60">MSG3 at Earth</option>
-                        <option value="MET7;earth;y-up;0.60">MET7 at Earth</option>
-                        <option value="GOES13;earth;y-up;0.60">GOES13 at Earth</option>
-                        <option value="GOES15;earth;y-up;0.60">GOES15 at Earth</option>
-                        <option value="MTSAT3;earth;y-up;0.60">MTSAT3 at Earth</option>
+                        <option value='{"type":"fixed", "from":"DSCOVR", "at":"earth", "up":"y-up", "fov":0.99}'>DSCOVR (L1) at Earth</option>
+                        <option value='{"type":"fixed", "from":"MSG3", "at":"earth", "up":"y-up", "fov":0.60}'>MSG3 at Earth</option>
+                        <option value='{"type":"fixed", "from":"MET7", "at":"earth", "up":"y-up", "fov":0.60}'>MET7 at Earth</option>
+                        <option value='{"type":"fixed", "from":"GOES13", "at":"earth", "up":"y-up", "fov":0.60}'>GOES13 at Earth</option>
+                        <option value='{"type":"fixed", "from":"GOES15", "at":"earth", "up":"y-up", "fov":0.60}'>GOES15 at Earth</option>
+                        <option value='{"type":"fixed", "from":"MTSAT3", "at":"earth", "up":"y-up", "fov":0.60}'>MTSAT3 at Earth</option>
                         <option value="" disabled="disabled">—————————————</option>
-                        <option value="DSCOVR;moon;y-up;1.0">DSCOVR (L1) at Moon</option>
-                        <option value="earth;moon;y-up;1.00">Earth at Moon</option>
-                        <option value="baltimore;moon;y-up;1.00">Baltimore at Moon</option>
+                        <option value='{"type":"fixed", "from":"DSCOVR", "at":"moon", "up":"y-up", "fov":1.0}'>DSCOVR (L1) at Moon</option>
+                        <option value='{"type":"fixed", "from":"earth", "at":"moon", "up":"y-up", "fov":1.0}'>Earth at Moon</option>
+                        <option value='{"type":"fixed", "from":"baltimore", "at":"moon", "up":"y-up", "fov":1.0}'>Baltimore at Moon</option>
                         <option value="" disabled="disabled">—————————————</option>
-                        <option value="earth;sun;y-up;1.00">Earth at Sun</option>
-                        <option value="baltimore;sun;y-up;1.00">Baltimore at Sun</option>
-                        <option value="moon;sun;y-up;1.00">Moon at Sun</option>
+                        <option value='{"type":"fixed", "from":"earth", "at":"sun", "up":"y-up", "fov":1.0}'>Earth at Sun</option>
+                        <option value='{"type":"fixed", "from":"baltimore", "at":"sun", "up":"y-up", "fov":1.0}'>Baltimore at Sun</option>
+                        <option value='{"type":"fixed", "from":"moon", "at":"sun", "up":"y-up", "fov":1.0}'>Moon at Sun</option>
                         <option value="" disabled="disabled">—————————————</option>
-                        <option value="baltimore;b-z;b-y;0.00">Baltimore Sky</option>
+                        <option value='{"type":"gimbal", "from":"baltimore", "at":"b-z", "up":"b-y", "fov":0.0}'>Baltimore Eastern Sky</option>
                     </select>
                 </td>
             </tr>
