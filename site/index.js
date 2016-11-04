@@ -58,8 +58,8 @@ let draw = function (deltaPosition) {
         case "DSCOVR-2015": currentTime = dscovrMoonTransit2015;
         case "2016111-1200": currentTime = geo_2016_11_1_1200;
     }
-    let hourDelta = scaleRange(timeRange, 0.025) * 2.0;
-    let dayDelta = scaleRange(dayRange, 0.025) * 180.0;
+    let hourDelta = scaleRange(timeRange, 0.0) * 2.0;
+    let dayDelta = scaleRange(dayRange, 0.0) * 180.0;
     let displayTime = currentTime + dayDelta + hourDelta;
     updateSolarSystem (displayTime);
     Thing.updateAll(displayTime);
