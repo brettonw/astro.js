@@ -108,13 +108,12 @@ let draw = function (deltaPosition) {
         let boundRadius = 1.0;
         let goalOpposite = boundRadius / ((zoomRangeValue * 0.9) + 0.1);
         let sinTheta = Utility.sin (fov / 2.0);
-        let hypotenuse = goalOpposite / sinTheta;
-        console.log ("Hypotenuse = " + hypotenuse);
-        //hypotenuse = 10;
+        let distance = goalOpposite / sinTheta;
+        //console.log ("Hypotenuse = " + hypotenuse);
 
         // setup the transformation matrix
         lookFromNode.transform = Float4x4.chain (
-            Float4x4.translate ([hypotenuse, 0, 0]),
+            Float4x4.translate ([distance, 0, 0]),
             Float4x4.rotateZ (currentPosition[1] * Math.PI * 0.5),
             Float4x4.rotateY (currentPosition[0] * Math.PI * -1),
             Float4x4.translate (lookAtPoint)
