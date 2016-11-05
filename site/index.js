@@ -3,7 +3,7 @@
 let starsScene;
 let solarSystemScene;
 
-let standardUniforms = Object.create(null);
+let standardUniforms = Object.create (null);
 
 let timeType;
 let showStarsCheckbox;
@@ -15,6 +15,7 @@ let fovRange;
 let cameraType;
 
 let camera;
+let cameraSettings = Object.create (null);
 
 let timeRange;
 let dayRange;
@@ -44,30 +45,44 @@ let geo_2016_11_1_1200 = computeJ2000 (utc (2016, 11, 1, 18, 0, 0));
 let eclipse2017 = computeJ2000 (utc (2017, 8, 21, 18, 0, 0));
 let dscovrMoonTransit2015 = computeJ2000 (utc (2015, 7, 16, 0, 0, 0));
 
+const ORIGIN = [0, 0, 0, 1];
+let getNodeOrigin = function (nodeName) {
+    return Float4x4.preMultiply (ORIGIN, Node.get (nodeName).getTransform ())
+};
+
 let refreshTimeoutId = 0;
 let draw = function (deltaPosition) {
     // ensure the draw function is called about once per minute to keep the display refreshed
     if (refreshTimeoutId != 0) {
         clearTimeout (refreshTimeoutId);
     }
-    refreshTimeoutId = setTimeout(function () { draw ([0, 0]); }, 1000 * 60);
+    refreshTimeoutId = setTimeout (function () {
+        draw ([0, 0]);
+    }, 1000 * 60);
 
     // determine how to set the clock
     switch (timeType.value) {
-        case "paused": break;
-        case "current": currentTime = computeJ2000 (new Date ()); break;
-        case "eclipse-2017": currentTime = eclipse2017; break;
-        case "DSCOVR-2015": currentTime = dscovrMoonTransit2015;
-        case "2016111-1200": currentTime = geo_2016_11_1_1200;
+        case "paused":
+            break;
+        case "current":
+            currentTime = computeJ2000 (new Date ());
+            break;
+        case "eclipse-2017":
+            currentTime = eclipse2017;
+            break;
+        case "DSCOVR-2015":
+            currentTime = dscovrMoonTransit2015;
+        case "2016111-1200":
+            currentTime = geo_2016_11_1_1200;
     }
-    let hourDelta = scaleRange(timeRange, 0.0) * 2.0;
-    let dayDelta = scaleRange(dayRange, 0.0) * 180.0;
+    let hourDelta = scaleRange (timeRange, 0.0) * 2.0;
+    let dayDelta = scaleRange (dayRange, 0.0) * 180.0;
     let displayTime = currentTime + dayDelta + hourDelta;
     updateSolarSystem (displayTime);
-    Thing.updateAll(displayTime);
+    Thing.updateAll (displayTime);
 
     // XXX convert from our display time to a Javascript Date
-    timeDisplay.innerHTML = displayTime.toFixed(4) + " (" + currentTime.toFixed (4) + ", " + (dayDelta + hourDelta).toFixed (4) + ")";
+    timeDisplay.innerHTML = displayTime.toFixed (4) + " (" + currentTime.toFixed (4) + ", " + (dayDelta + hourDelta).toFixed (4) + ")";
 
     // set up the view parameters
     let zoomRangeValue = zoomRange.value;
@@ -80,61 +95,74 @@ let draw = function (deltaPosition) {
     starsNode.alpha = Math.sqrt (fovRangeValueInverse);
     let fov = 1.0 + (59.0 * fovRangeValueInverse);
 
-    // get the selected camera and tease out the parameters for it
-    let lookFromNode = Node.get (camera.from);
-    let lookAtNode = Node.get (camera.at);
+    // set up the view parameters
+    let viewMatrix;
 
-    // get the "to" node origin
-    let lookAtTransform = lookAtNode.getTransform ();
-    let lookAtPoint = Float4x4.preMultiply ([0, 0, 0, 1], lookAtTransform);
-    //console.log ("LOOK AT: " + Float3.str (lookAtPoint));
+    switch (camera.type) {
+        case "fixed": {
+            // get the points from the requested nodes
+            let lookFromPoint = getNodeOrigin (camera.from);
+            let lookAtPoint = getNodeOrigin (camera.at);
 
-    // update the orbit camera if we should
-    if (camera.type == "portrait") {
-        if (!(camera.at in lookFromNode.currentPosition)) {
-            lookFromNode.currentPosition[camera.at] = [0, 0];
+            // compute the view matrix
+            viewMatrix = Float4x4.lookFromAt (lookFromPoint, lookAtPoint, [0, 1, 0]);
+            break;
         }
+        case "portrait":
+        case "orbit": {
+            // make sure there is a value for the current position (once per "at")
+            if (!(camera.name in cameraSettings)) {
+                cameraSettings[camera.name] = { currentPosition: [0, 0] };
+            }
+            let settings = cameraSettings[camera.name];
 
-        // update the current controller position and clamp or wrap accordingly
-        let currentPosition = Float2.add (lookFromNode.currentPosition[camera.at], deltaPosition);
-        currentPosition[0] = Utility.unwind (currentPosition[0], 2);
-        currentPosition[1] = Math.max (Math.min (currentPosition[1], 0.9), -0.9);
-        lookFromNode.currentPosition[camera.at] = currentPosition;
+            // update the current controller position and clamp or wrap accordingly
+            let currentPosition = Float2.add (settings.currentPosition, deltaPosition);
+            currentPosition[0] = Utility.unwind (currentPosition[0], 2);
+            currentPosition[1] = Math.max (Math.min (currentPosition[1], 0.9), -0.9);
+            settings.currentPosition = currentPosition;
 
-        // compute a few image composition values based off ensuring a sphere is fully in view
-        // XXX for now, we assume the bound on the observed object is 1, but I need to get bounds
-        // XXX on the nodes to be really effective
-        let boundRadius = 1.0;
-        let goalOpposite = boundRadius / ((zoomRangeValue * 0.9) + 0.1);
-        let sinTheta = Utility.sin (fov / 2.0);
-        let distance = goalOpposite / sinTheta;
-        //console.log ("Hypotenuse = " + hypotenuse);
+            // compute a few image composition values based off ensuring a sphere is fully in view
+            // XXX for now, we assume the bound on the observed object is 1, but I need to get bounds
+            // XXX on the nodes to be really effective
+            let boundRadius = 1.0;
+            let goalOpposite = boundRadius / ((zoomRangeValue * 0.9) + 0.1);
+            let sinTheta = Utility.sin (fov / 2.0);
+            let distance = goalOpposite / sinTheta;
+            //console.log ("distance = " + distance);
 
-        // setup the transformation matrix
-        lookFromNode.transform = Float4x4.chain (
-            Float4x4.translate ([distance, 0, 0]),
-            Float4x4.rotateZ (currentPosition[1] * Math.PI * 0.5),
-            Float4x4.rotateY (currentPosition[0] * Math.PI * -1),
-            Float4x4.translate (lookAtPoint)
-        );
+            // get the look at point from the requested node
+            let lookAtPoint = getNodeOrigin (camera.at);
+
+            // get the look from point as an orbit transformation around the look at point
+            let lookFromPoint = Float4x4.preMultiply ([0, 0, 0, 1], Float4x4.chain (
+                Float4x4.translate ([distance, 0, 0]),
+                Float4x4.rotateZ (currentPosition[1] * Math.PI * 0.5),
+                Float4x4.rotateY (currentPosition[0] * Math.PI * -1),
+                Float4x4.translate (lookAtPoint)
+            ));
+
+            // compute the view matrix
+            viewMatrix = Float4x4.lookFromAt (lookFromPoint, lookAtPoint, [0, 1, 0]);
+            break;
+        }
+        case "gimbal": {
+            // get the points from the requested nodes
+            let lookFromPoint = getNodeOrigin (camera.from);
+            let lookAtPoint = getNodeOrigin (camera.at);
+            let lookUpPoint = getNodeOrigin (camera.up);
+            let lookUpVector = Float3.normalize (Float3.subtract (lookUpPoint, lookFromPoint));
+
+            // compute the view matrix
+            viewMatrix = Float4x4.lookFromAt (lookFromPoint, lookAtPoint, lookUpVector);
+            break;
+        }
+        case "target": {
+            // TBD
+            break;
+        }
     }
 
-    // get the "from" node origin
-    let lookFromTransform = lookFromNode.getTransform ();
-    let lookFromPoint = Float4x4.preMultiply ([0, 0, 0, 1], lookFromTransform);
-    //console.log ("LOOK FROM: " + Float3.str (lookFromPoint));
-
-    // figure the up vector
-    let up = [0, 1, 0];
-    if (camera.up != "y-up") {
-        let upNode = Node.get (camera.up);
-        let upTransform = upNode.getTransform ();
-        let upPoint = Float4x4.preMultiply ([0, 0, 0, 1], upTransform);
-        up = Float3.normalize (Float3.subtract (upPoint, lookFromPoint));
-    }
-
-    // compute the view matrix
-    let viewMatrix = Float4x4.lookFromAt (lookFromPoint, lookAtPoint, up);
 
     // update the visibility layers
     starsNode.enabled = showStarsCheckbox.checked;
@@ -152,7 +180,7 @@ let draw = function (deltaPosition) {
     standardUniforms.CAMERA_POSITION = [0, 0, 0];
     standardUniforms.PROJECTION_MATRIX_PARAMETER = Float4x4.perspective (fov, context.viewportWidth / context.viewportHeight, 1000, starSphereRadius * 1.1);
     standardUniforms.VIEW_MATRIX_PARAMETER = starsViewMatrix;
-    standardUniforms.MODEL_MATRIX_PARAMETER = Float4x4.identity ();
+    standardUniforms.MODEL_MATRIX_PARAMETER = Float4x4.IDENTITY;
     starsScene.traverse (standardUniforms);
 
     // update the visibility layers
@@ -161,7 +189,7 @@ let draw = function (deltaPosition) {
 
     // set up to draw the solar system
     standardUniforms.VIEW_MATRIX_PARAMETER = viewMatrix;
-    standardUniforms.MODEL_MATRIX_PARAMETER = Float4x4.identity ();
+    standardUniforms.MODEL_MATRIX_PARAMETER = Float4x4.IDENTITY;
 
     // compute the camera position and set it in the standard uniforms
     let vmi = Float4x4.inverse (viewMatrix);
@@ -273,7 +301,7 @@ let buildScene = function () {
 
     let sunNode = Node.new ({
         name: "sun",
-        transform: Float4x4.identity (),
+        transform: Float4x4.IDENTITY,
         state: function (standardUniforms) {
             Program.get ("color").use ();
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
@@ -307,18 +335,9 @@ let buildScene = function () {
         }
     });
 
-    // add a root camera node
-    let cameraNode = Node.new ({
-        name: "camera",
-        transform: Float4x4.translate([0.0, 0.0, 8.0]),
-        children: false
-    });
-    cameraNode.currentPosition = Object.create (null);
-    solarSystemScene.addChild (cameraNode);
-
     let moonNode = Node.new ({
         name: "moon",
-        transform: Float4x4.identity (),
+        transform: Float4x4.IDENTITY,
         state: function (standardUniforms) {
             Program.get ("basic-texture").use ();
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
@@ -347,7 +366,7 @@ let buildScene = function () {
 
     let worldNode = Node.new ({
         name: "world",
-        transform: Float4x4.identity ()
+        transform: Float4x4.IDENTITY
     });
     solarSystemScene.addChild (worldNode);
 
@@ -355,7 +374,7 @@ let buildScene = function () {
 
     let testNode = Node.new ({
         name: "test",
-        transform: Float4x4.identity (),
+        transform: Float4x4.IDENTITY,
         state: function (standardUniforms) {
             Program.get ("hardlight").use ();
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
@@ -371,7 +390,7 @@ let buildScene = function () {
     worldNode.addChild (testNode);
 
     let earthRenderNode = Node.new ({
-        enabled:(!useTest)
+        enabled: (!useTest)
     });
     worldNode.addChild (earthRenderNode);
 
@@ -479,15 +498,15 @@ let buildScene = function () {
 
     let dscovrNode = Node.new ({
         name: "DSCOVR",
-        transform:Float4x4.identity,
+        transform: Float4x4.identity,
         /*
-        state: function (standardUniforms) {
-            Program.get ("basic").use ();
-            standardUniforms.MODEL_COLOR = [1.0, 0.5, 0.5];
-        },
-        shape: "ball-small",
-        */
-        children:false
+         state: function (standardUniforms) {
+         Program.get ("basic").use ();
+         standardUniforms.MODEL_COLOR = [1.0, 0.5, 0.5];
+         },
+         shape: "ball-small",
+         */
+        children: false
     });
     solarSystemScene.addChild (dscovrNode);
 
@@ -498,7 +517,7 @@ let buildScene = function () {
         node.transform = Float4x4.translate (Float3.scale (solarSystem.L1, 0.5));
     });
 
-    selectTime();
+    selectTime ();
 };
 
 let mouseWheel = function (event) {
@@ -531,14 +550,14 @@ let onBodyLoad = function () {
     standardUniforms.AMBIENT_LIGHT_COLOR = [1.0, 1.0, 1.0];
     standardUniforms.LIGHT_COLOR = [1.0, 1.0, 1.0];
 
-    timeDisplay = document.getElementById("timeDisplay");
+    timeDisplay = document.getElementById ("timeDisplay");
     timeType = document.getElementById ("timeTypeSelect");
     showStarsCheckbox = document.getElementById ("showStarsCheckbox");
     showConstellationsCheckbox = document.getElementById ("showConstellationsCheckbox");
-    showCloudsCheckbox = document.getElementById("showCloudsCheckbox");
-    showAtmosphereCheckbox = document.getElementById("showAtmosphereCheckbox");
-    zoomRange = document.getElementById("zoomRange");
-    fovRange = document.getElementById("fovRange");
+    showCloudsCheckbox = document.getElementById ("showCloudsCheckbox");
+    showAtmosphereCheckbox = document.getElementById ("showAtmosphereCheckbox");
+    zoomRange = document.getElementById ("zoomRange");
+    fovRange = document.getElementById ("fovRange");
     cameraType = document.getElementById ("cameraTypeSelect");
     extractCamera ();
     timeRange = document.getElementById ("timeRange");
@@ -547,7 +566,7 @@ let onBodyLoad = function () {
     // load the basic shaders from the original soure
     LoaderShader.new ("http://webgl-js.azurewebsites.net/site/shaders/@.glsl")
         .addVertexShaders ("basic")
-        .addFragmentShaders([ "basic", "basic-texture", "color", "overlay", "texture" ])
+        .addFragmentShaders (["basic", "basic-texture", "color", "overlay", "texture"])
         .go (null, OnReady.new (null, function (x) {
             Program.new ("basic");
             Program.new ("basic-texture", { vertexShader: "basic" });
@@ -557,7 +576,7 @@ let onBodyLoad = function () {
 
             // load the astro specific shaders, and build the programs
             LoaderShader.new ("shaders/@.glsl")
-                .addFragmentShaders([ "earth", "clouds", "atmosphere", "hardlight" ])
+                .addFragmentShaders (["earth", "clouds", "atmosphere", "hardlight"])
                 .go (null, OnReady.new (null, function (x) {
                     Program.new ("earth", { vertexShader: "basic" });
                     Program.new ("clouds", { vertexShader: "basic" });
@@ -565,11 +584,11 @@ let onBodyLoad = function () {
                     Program.new ("hardlight", { vertexShader: "basic" });
 
                     // load the textures
-                    LoaderPath.new ({ type:Texture, path:"textures/@.png"})
+                    LoaderPath.new ({ type: Texture, path: "textures/@.png" })
                         .addItems (["clouds", "earth-day", "earth-night", "earth-specular-map", "moon"], { generateMipMap: true })
                         .addItems (["starfield", "constellations"])
                         .go (null, OnReady.new (null, function (x) {
-                            LoaderPath.new ({ type:Texture, path:"textures-test/@.png"})
+                            LoaderPath.new ({ type: Texture, path: "textures-test/@.png" })
                                 .addItems ("earth-plate-carree")
                                 .go (null, OnReady.new (null, function (x) {
                                     buildScene ();
