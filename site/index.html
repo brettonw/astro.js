@@ -7,7 +7,10 @@
     <link rel="icon" type="image/png" href="img/tab-icon.png?v=2"/>
     <link rel="stylesheet" href="index.css"/>
 
+    <!--
     <script type="text/javascript" src="http://webgl-js.azurewebsites.net/site/webgl-debug.js"></script>
+    -->
+    <script type="text/javascript" src="http://localhost:8080/webgl.js/site/webgl-debug.js"></script>
     <script type="text/javascript" src="astro.js"></script>
     <script type="text/javascript" src="solar-system.js"></script>
     <script type="text/javascript" src="index.js"></script>
@@ -113,8 +116,10 @@
                         <option value='{"name":"p", "type":"target", "targets":["moon", "earth"], "fov":0.5}'>Earth and Moon</option>
                         <option value='{"name":"q", "type":"target", "targets":["GOES13", "GOES15", "earth"], "fov":0.5}'>Western Sats</option>
                         <option value="" disabled="disabled">—————————————</option>
-                        <option value='{"name":"r", "type":"ots", "from":"moon", "at":"earth", "fov":0.5}'>OTS Moon at Earth</option>
-                        <option value='{"name":"s", "type":"ots", "from":"earth", "at":"moon", "fov":0.5}'>OTS Earth at Moon</option>
+                        <option value='{"name":"r", "type":"ots", "from":"moon", "at":"earth", "zoom":0.5, "fov":0.5}'>OTS Moon at Earth</option>
+                        <option value='{"name":"s", "type":"ots", "from":"earth", "at":"moon", "zoom":0.5, "fov":0.75}'>OTS Earth at Moon</option>
+                        <option value='{"name":"t", "type":"ots", "from":"GOES13", "at":"earth", "zoom":0.5, "fov":0.75}'>OTS GOES13 at Earth</option>
+                        <option value='{"name":"u", "type":"ots", "from":"GOES15", "at":"earth", "zoom":0.5, "fov":0.75}'>OTS GOES15 at Earth</option>
                     </select>
                 </td>
             </tr>

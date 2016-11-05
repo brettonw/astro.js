@@ -209,6 +209,55 @@ let draw = function (deltaPosition) {
             viewMatrix = Float4x4.lookFromAt (lookFromPoint, centralPoint, [0, 1, 0]);
             break;
         }
+        case "ots": {
+            // make sure there is a value for the current position (once per "at")
+            if (!(camera.name in cameraSettings)) {
+                cameraSettings[camera.name] = { currentPosition: [-0.75, 0.75] };
+            }
+            let settings = cameraSettings[camera.name];
+
+            // update the current controller position and clamp or wrap accordingly
+            let currentPosition = Float2.add (settings.currentPosition, Float2.scale (deltaPosition, 3.0));
+            currentPosition[0] = Math.max (Math.min (currentPosition[0], 1.0), -1.0);
+            currentPosition[1] = Math.max (Math.min (currentPosition[1], 1.0), -1.0);
+            settings.currentPosition = currentPosition;
+
+            // assing an angle cap
+            let angleCap = (Math.PI * 0.06125);
+
+            // compute a central point for the two
+            let from = getNodeOrigin (camera.from);
+            let fromWeight = 4;
+            let at = getNodeOrigin (camera.at);
+            let centralPoint = Float3.scale (Float3.add (Float3.scale (from, fromWeight), at), 1 / (fromWeight + 1));
+
+            // compute a bound on the stabbing camera
+            // XXX for now, we assume the bound on the observed object is 1, but I need to get bounds
+            // XXX on the nodes to be really effective
+            let deltaVector = Float3.subtract (from, centralPoint);
+            let deltaVectorNorm = Float3.norm (deltaVector);
+            let bound = Math.sin (angleCap) * deltaVectorNorm;
+
+            // compute a few image composition values based off ensuring the pair is fully in view
+            let goalOpposite = bound / ((zoomRangeValue * 0.9) + 0.1);
+            let tanTheta = Utility.tan (fov / 2.0);
+            let distance = goalOpposite / tanTheta;
+            //console.log ("distance = " + distance);
+
+            // get the look from point as an orbit transformation around the look at point
+            let lookFromPoint = Float4x4.preMultiply (ORIGIN, Float4x4.chain (
+                //Float4x4.translate ([distance, 0, 0]),
+                Float4x4.translate (Float3.scale (deltaVector, (deltaVectorNorm + distance) / deltaVectorNorm)),
+                Float4x4.translate (Float3.scale ([0, 1, 0], currentPosition[1] * bound * 2.0)),
+                //Float4x4.rotateZ (currentPosition[1] * angleCap * -0.5),
+                Float4x4.rotateY (currentPosition[0] * angleCap * -1),
+                Float4x4.translate (centralPoint)
+            ));
+
+            // compute the view matrix
+            viewMatrix = Float4x4.lookFromAt (lookFromPoint, centralPoint, [0, 1, 0]);
+            break;
+        }
     }
 
 
@@ -295,6 +344,8 @@ let extractCamera = function () {
     camera = JSON.parse (cameraType.value);
     camera.fov = Utility.defaultValue (camera.fov, 0.5);
     fovRange.value = fovRange.max * camera.fov;
+    camera.zoom = Utility.defaultValue (camera.zoom, 0.5);
+    zoomRange.value = zoomRange.max * camera.zoom;
     camera.up = Utility.defaultValue (camera.up, "y-up");
 };
 
