@@ -45,10 +45,20 @@ let currentTime;
 let geo_2016_11_1_1200 = computeJ2000 (utc (2016, 11, 1, 18, 0, 0));
 let eclipse2017 = computeJ2000 (utc (2017, 8, 21, 18, 0, 0));
 let dscovrMoonTransit2015 = computeJ2000 (utc (2015, 7, 16, 0, 0, 0));
+let apollo11LandingTime = computeJ2000 (utc (1969, 7, 24, 16, 50, 35));
 
 const ORIGIN = [0, 0, 0, 1];
 let getNodeOrigin = function (nodeName) {
     return Float4x4.preMultiply (ORIGIN, Node.get (nodeName).getTransform ())
+};
+
+const ORIGIN_BOUND = [1, 0, 0, 1];
+let getNodeBound = function (nodeName) {
+    let nodeTransform = Node.get (nodeName).getTransform ();
+    let origin = Float4x4.preMultiply (ORIGIN, nodeTransform);
+    let originBound = Float4x4.preMultiply (ORIGIN_BOUND, nodeTransform);
+    let deltaVector = Float3.subtract (originBound, origin);
+    return Float3.norm (deltaVector);
 };
 
 let refreshTimeoutId = 0;
@@ -70,6 +80,9 @@ let draw = function (deltaPosition) {
             break;
         case "eclipse-2017":
             currentTime = eclipse2017;
+            break;
+        case "apollo-11-1969":
+            currentTime = apollo11LandingTime;
             break;
         case "DSCOVR-2015":
             currentTime = dscovrMoonTransit2015;
@@ -123,17 +136,15 @@ let draw = function (deltaPosition) {
             currentPosition[1] = Math.max (Math.min (currentPosition[1], 0.9), -0.9);
             settings.currentPosition = currentPosition;
 
+            // get the look at point from the requested node
+            let lookAtPoint = getNodeOrigin (camera.at);
+
             // compute a few image composition values based off ensuring a sphere is fully in view
-            // XXX for now, we assume the bound on the observed object is 1, but I need to get bounds
-            // XXX on the nodes to be really effective
-            let boundRadius = 1.0;
+            let boundRadius = getNodeBound (camera.at);
             let goalOpposite = boundRadius / ((zoomRangeValue * 0.9) + 0.1);
             let sinTheta = Utility.sin (fov / 2.0);
             let distance = goalOpposite / sinTheta;
             //console.log ("distance = " + distance);
-
-            // get the look at point from the requested node
-            let lookAtPoint = getNodeOrigin (camera.at);
 
             // get the look from point as an orbit transformation around the look at point
             let lookFromPoint = Float4x4.preMultiply ([0, 0, 0, 1], Float4x4.chain (
@@ -236,7 +247,7 @@ let draw = function (deltaPosition) {
             // XXX on the nodes to be really effective
             let deltaVector = Float3.subtract (from, centralPoint);
             let deltaVectorNorm = Float3.norm (deltaVector);
-            let bound = Math.sin (angleCap) * deltaVectorNorm;
+            let bound = Math.sin (angleCap) * deltaVectorNorm * getNodeBound(camera.from);
 
             // compute a few image composition values based off ensuring the pair is fully in view
             let goalOpposite = bound / ((zoomRangeValue * 0.9) + 0.1);
@@ -354,6 +365,27 @@ let selectCamera = function () {
     draw ([0, 0]);
 };
 
+let addGeoMarker = function (node, name, radius, latitude, longitude) {
+    let geoMarkerTransform = Float4x4.chain (
+        Float4x4.scale (0.02),
+        Float4x4.translate ([radius, 0, 0]),
+        Float4x4.rotateZ (Utility.degreesToRadians (latitude)),
+        Float4x4.rotateY (Utility.degreesToRadians (180 + longitude))
+    );
+    let geoMarkerNode = Node.new ({
+        name: name,
+        transform: geoMarkerTransform,
+        /*
+        state: function (standardUniforms) {
+            Program.get ("basic").use ();
+            standardUniforms.MODEL_COLOR = [1.0, 0.5, 0.5];
+        },
+        shape: "ball-small",
+        */
+        children: false
+    });
+    node.addChild (geoMarkerNode);
+};
 
 let buildScene = function () {
     makeBall ("ball", 72);
@@ -447,8 +479,7 @@ let buildScene = function () {
             standardUniforms.SPECULAR_CONTRIBUTION = 0.05;
             standardUniforms.SPECULAR_EXPONENT = 8.0;
         },
-        shape: "ball-small",
-        children: false
+        shape: "ball-small"
     });
     solarSystemScene.addChild (moonNode);
 
@@ -463,6 +494,10 @@ let buildScene = function () {
             Float4x4.translate (Float3.scale (solarSystem.moonDirection, (closeMoonCheckbox.checked ? 0.25 : 1) * solarSystem.moonR))
         );
     });
+
+    // add the apollo 11 landing site
+    addGeoMarker (moonNode, "apollo 11", 1.001, 0.67409, 23.47298);
+    addGeoMarker (moonNode, "apollo 11-y", 1.1, 0.67409, 23.47298);
 
     let worldNode = Node.new ({
         name: "world",
@@ -541,23 +576,9 @@ let buildScene = function () {
     addGeoSatellite ("MTSAT3", 140.7);
 
     // add some geo markers
-    let addGeoMarker = function (name, radius, latitude, longitude) {
-        let geoMarkerTransform = Float4x4.chain (
-            Float4x4.scale (0.02),
-            Float4x4.translate ([radius, 0, 0]),
-            Float4x4.rotateZ (Utility.degreesToRadians (latitude)),
-            Float4x4.rotateY (Utility.degreesToRadians (180 + longitude))
-        );
-        let geoMarkerNode = Node.new ({
-            name: name,
-            transform: geoMarkerTransform,
-            children: false
-        });
-        earthNode.addChild (geoMarkerNode);
-    };
-    addGeoMarker ("baltimore", 1.001, 39.2904, -76.6122);
-    addGeoMarker ("b-z", 1.001, 39.2904, -76.0);
-    addGeoMarker ("b-y", 1.1, 39.2904, -76.6122);
+    addGeoMarker (earthNode, "baltimore", 1.001, 39.2904, -76.6122);
+    addGeoMarker (earthNode, "b-z", 1.001, 39.2904, -76.0);
+    addGeoMarker (earthNode, "b-y", 1.1, 39.2904, -76.6122);
 
     // clouds at 40km is a bit on the high side..., but it shows well
     let cloudHeight = (40 + earthRadius) / earthRadius;
@@ -621,7 +642,7 @@ let buildScene = function () {
 };
 
 let mouseWheel = function (event) {
-    console.log ("e: " + event.wheelDelta);
+    //console.log ("e: " + event.wheelDelta);
     if (event.wheelDelta > 0) {
         fovRange.stepUp (1);
     } else if (event.wheelDelta < 0) {
