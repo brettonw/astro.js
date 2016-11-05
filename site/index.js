@@ -10,6 +10,7 @@ let showStarsCheckbox;
 let showConstellationsCheckbox;
 let showCloudsCheckbox;
 let showAtmosphereCheckbox;
+let closeMoonCheckbox;
 let zoomRange;
 let fovRange;
 let cameraType;
@@ -158,7 +159,54 @@ let draw = function (deltaPosition) {
             break;
         }
         case "target": {
-            // TBD
+            // make sure there is a value for the current position (once per "at")
+            if (!(camera.name in cameraSettings)) {
+                cameraSettings[camera.name] = { currentPosition: [0, 0] };
+            }
+            let settings = cameraSettings[camera.name];
+
+            // update the current controller position and clamp or wrap accordingly
+            let currentPosition = Float2.add (settings.currentPosition, deltaPosition);
+            currentPosition[0] = Utility.unwind (currentPosition[0], 2);
+            currentPosition[1] = Math.max (Math.min (currentPosition[1], 0.9), -0.9);
+            settings.currentPosition = currentPosition;
+
+            // compute a central point for all of the targets
+            let targets = camera.targets;
+            let centralPoint = [0, 0, 0];
+            let points = [];
+            for (let target of targets) {
+                let targetPoint = getNodeOrigin (target);
+                points.push (targetPoint);
+                centralPoint = Float3.add (centralPoint, targetPoint);
+            }
+            centralPoint = Float3.scale (centralPoint, 1.0 / targets.length);
+
+            // compute a bound on the system of targets
+            let hBound = 0;
+            for (let point of points) {
+                let deltaVector = Float3.subtract (centralPoint, point);
+                deltaVector[1] = 0;
+                hBound = Math.max (Float3.norm (deltaVector), hBound);
+            }
+
+            // compute a few image composition values based off ensuring a group is fully in view
+            let goalOpposite = hBound / ((zoomRangeValue * 1.8) + 0.2);
+            let tanTheta = Utility.tan (fov / 2.0);
+            let distance = goalOpposite / tanTheta;
+            //console.log ("distance = " + distance);
+            //distance = 150;
+
+            // get the look from point as an orbit transformation around the look at point
+            let lookFromPoint = Float4x4.preMultiply (ORIGIN, Float4x4.chain (
+                Float4x4.translate ([distance, 0, 0]),
+                Float4x4.rotateZ (currentPosition[1] * Math.PI * 0.5),
+                Float4x4.rotateY (currentPosition[0] * Math.PI * -1),
+                Float4x4.translate (centralPoint)
+            ));
+
+            // compute the view matrix
+            viewMatrix = Float4x4.lookFromAt (lookFromPoint, centralPoint, [0, 1, 0]);
             break;
         }
     }
@@ -361,7 +409,8 @@ let buildScene = function () {
         node.transform = Float4x4.chain (
             Float4x4.scale (moonScale),
             Float4x4.rotateXAxisTo (solarSystem.moonDirection),
-            Float4x4.translate (Float3.scale (solarSystem.moonDirection, solarSystem.moonR)));
+            Float4x4.translate (Float3.scale (solarSystem.moonDirection, (closeMoonCheckbox.checked ? 0.25 : 1) * solarSystem.moonR))
+        );
     });
 
     let worldNode = Node.new ({
@@ -556,6 +605,7 @@ let onBodyLoad = function () {
     showConstellationsCheckbox = document.getElementById ("showConstellationsCheckbox");
     showCloudsCheckbox = document.getElementById ("showCloudsCheckbox");
     showAtmosphereCheckbox = document.getElementById ("showAtmosphereCheckbox");
+    closeMoonCheckbox = document.getElementById ("closeMoonCheckbox");
     zoomRange = document.getElementById ("zoomRange");
     fovRange = document.getElementById ("fovRange");
     cameraType = document.getElementById ("cameraTypeSelect");

@@ -68,6 +68,12 @@
                 </td>
             </tr>
             <tr>
+                <td>Close Moon</td>
+                <td style="text-align: right;">
+                    <input type="checkbox" id="closeMoonCheckbox" onchange="draw ([0, 0]);">
+                </td>
+            </tr>
+            <tr>
                 <td>Zoom</td>
                 <td style="text-align: right;">
                     <input type="range" id="zoomRange" min="0" max="100" step="1" value="50" oninput="draw ([0, 0]);">
@@ -104,7 +110,11 @@
                         <option value="" disabled="disabled">—————————————</option>
                         <option value='{"name":"o", "type":"gimbal", "from":"baltimore", "at":"b-z", "up":"b-y", "fov":0.0}'>Baltimore Eastern Sky</option>
                         <option value="" disabled="disabled">—————————————</option>
-                        <option value='{"name":"p", "type":"target", "targets":["moon", "earth"], "fov":0.0}'>Baltimore Eastern Sky</option>
+                        <option value='{"name":"p", "type":"target", "targets":["moon", "earth"], "fov":0.5}'>Earth and Moon</option>
+                        <option value='{"name":"q", "type":"target", "targets":["GOES13", "GOES15", "earth"], "fov":0.5}'>Western Sats</option>
+                        <option value="" disabled="disabled">—————————————</option>
+                        <option value='{"name":"r", "type":"ots", "from":"moon", "at":"earth", "fov":0.5}'>OTS Moon at Earth</option>
+                        <option value='{"name":"s", "type":"ots", "from":"earth", "at":"moon", "fov":0.5}'>OTS Earth at Moon</option>
                     </select>
                 </td>
             </tr>
