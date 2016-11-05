@@ -14,6 +14,8 @@ let zoomRange;
 let fovRange;
 let cameraType;
 
+let camera;
+
 let timeRange;
 let dayRange;
 
@@ -79,13 +81,8 @@ let draw = function (deltaPosition) {
     let fov = 1.0 + (59.0 * fovRangeValueInverse);
 
     // get the selected camera and tease out the parameters for it
-    let cameraTypeValue = JSON.parse (cameraType.value);
-    let cameraViewType = cameraTypeValue.type;
-    let cameraFrom = cameraTypeValue.from;
-    let lookFromNode = Node.get (cameraFrom);
-    let cameraAt = cameraTypeValue.at;
-    let lookAtNode = Node.get (cameraAt);
-    let cameraUp = Utility.defaultValue (cameraTypeValue.up, "y-up");
+    let lookFromNode = Node.get (camera.from);
+    let lookAtNode = Node.get (camera.at);
 
     // get the "to" node origin
     let lookAtTransform = lookAtNode.getTransform ();
@@ -93,16 +90,16 @@ let draw = function (deltaPosition) {
     //console.log ("LOOK AT: " + Float3.str (lookAtPoint));
 
     // update the orbit camera if we should
-    if (cameraFrom == "camera") {
-        if (!(cameraAt in lookFromNode.currentPosition)) {
-            lookFromNode.currentPosition[cameraAt] = [0, 0];
+    if (camera.type == "portrait") {
+        if (!(camera.at in lookFromNode.currentPosition)) {
+            lookFromNode.currentPosition[camera.at] = [0, 0];
         }
 
         // update the current controller position and clamp or wrap accordingly
-        let currentPosition = Float2.add (lookFromNode.currentPosition[cameraAt], deltaPosition);
+        let currentPosition = Float2.add (lookFromNode.currentPosition[camera.at], deltaPosition);
         currentPosition[0] = Utility.unwind (currentPosition[0], 2);
         currentPosition[1] = Math.max (Math.min (currentPosition[1], 0.9), -0.9);
-        lookFromNode.currentPosition[cameraAt] = currentPosition;
+        lookFromNode.currentPosition[camera.at] = currentPosition;
 
         // compute a few image composition values based off ensuring a sphere is fully in view
         // XXX for now, we assume the bound on the observed object is 1, but I need to get bounds
@@ -129,8 +126,8 @@ let draw = function (deltaPosition) {
 
     // figure the up vector
     let up = [0, 1, 0];
-    if (cameraUp != "y-up") {
-        let upNode = Node.get (cameraUp);
+    if (camera.up != "y-up") {
+        let upNode = Node.get (camera.up);
         let upTransform = upNode.getTransform ();
         let upPoint = Float4x4.preMultiply ([0, 0, 0, 1], upTransform);
         up = Float3.normalize (Float3.subtract (upPoint, lookFromPoint));
@@ -218,10 +215,15 @@ let selectTime = function () {
     draw ([0, 0]);
 };
 
+let extractCamera = function () {
+    camera = JSON.parse (cameraType.value);
+    camera.fov = Utility.defaultValue (camera.fov, 0.5);
+    fovRange.value = fovRange.max * camera.fov;
+    camera.up = Utility.defaultValue (camera.up, "y-up");
+};
+
 let selectCamera = function () {
-    let cameraTypeValue = JSON.parse (cameraType.value);
-    let cameraFov = Utility.defaultValue (cameraTypeValue.fov, 0.5);
-    fovRange.value = fovRange.max * cameraFov;
+    extractCamera ();
     draw ([0, 0]);
 };
 
@@ -538,6 +540,7 @@ let onBodyLoad = function () {
     zoomRange = document.getElementById("zoomRange");
     fovRange = document.getElementById("fovRange");
     cameraType = document.getElementById ("cameraTypeSelect");
+    extractCamera ();
     timeRange = document.getElementById ("timeRange");
     dayRange = document.getElementById ("dayRange");
 
