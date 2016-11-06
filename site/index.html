@@ -96,8 +96,8 @@
                 <td>Camera</td>
                 <td style="text-align: right;">
                     <select id="cameraTypeSelect" onchange="selectCamera ();">
-                        <option value='{"name":"a", "type":"portrait", "at":"earth", "zoom":0.75, "fov":0.5}' selected>Orbit Earth</option>
-                        <option value='{"name":"b", "type":"portrait", "at":"moon", "zoom":0.75, "fov":0.5}'>Orbit Moon</option>
+                        <option value='{"name":"a", "type":"portrait", "at":"earth", "zoom":0.75, "fov":0.5, "default":[0.00, 0.00]}' selected>Orbit Earth</option>
+                        <option value='{"name":"b", "type":"portrait", "at":"moon", "zoom":0.75, "fov":0.5, "default":[0.00, 0.00]}'>Orbit Moon</option>
                         <option value="" disabled="disabled">—————————————</option>
                         <option value='{"name":"c", "type":"fixed", "from":"moon", "at":"earth", "fov":0.9}'>Moon at Earth</option>
                         <option value='{"name":"v", "type":"gimbal", "from":"apollo 11", "at":"earth", "up":"apollo 11-y", "fov":0.9}'>Apollo 11 at Earth</option>
@@ -121,10 +121,10 @@
                         <option value='{"name":"p", "type":"target", "targets":["moon", "earth"], "fov":0.5}'>Earth and Moon</option>
                         <option value='{"name":"q", "type":"target", "targets":["GOES13", "GOES15", "earth"], "fov":0.5}'>Western Sats</option>
                         <option value="" disabled="disabled">—————————————</option>
-                        <option value='{"name":"r", "type":"ots", "from":"moon", "at":"earth", "zoom":0.25, "fov":0.5}'>OTS Moon at Earth</option>
-                        <option value='{"name":"s", "type":"ots", "from":"earth", "at":"moon", "zoom":0.5, "fov":0.75}'>OTS Earth at Moon</option>
-                        <option value='{"name":"t", "type":"ots", "from":"GOES13", "at":"earth", "zoom":0.5, "fov":0.5}'>OTS GOES13 at Earth</option>
-                        <option value='{"name":"u", "type":"ots", "from":"GOES15", "at":"earth", "zoom":0.5, "fov":0.5}'>OTS GOES15 at Earth</option>
+                        <option value='{"name":"r", "type":"ots", "from":"moon", "at":"earth", "zoom":0.5, "fov":0.75, "default":[-0.30, 0.40]}'>OTS Moon at Earth</option>
+                        <option value='{"name":"s", "type":"ots", "from":"earth", "at":"moon", "zoom":0.5, "fov":0.75, "default":[-0.75, 0.50]}'>OTS Earth at Moon</option>
+                        <option value='{"name":"t", "type":"ots", "from":"GOES13", "at":"earth", "zoom":0.5, "fov":0.5, "default":[-0.35, 0.75]}'>OTS GOES13 at Earth</option>
+                        <option value='{"name":"u", "type":"ots", "from":"GOES15", "at":"earth", "zoom":0.5, "fov":0.5, "default":[-0.35, 0.75]}'>OTS GOES15 at Earth</option>
                     </select>
                 </td>
             </tr>

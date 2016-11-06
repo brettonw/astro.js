@@ -231,7 +231,7 @@ let draw = function (deltaPosition) {
         case "ots": {
             // make sure there is a value for the current position (once per "at")
             if (!(camera.name in cameraSettings)) {
-                cameraSettings[camera.name] = { currentPosition: [-0.5, 0.5] };
+                cameraSettings[camera.name] = { currentPosition: Utility.defaultValue (camera.default, [0.00, 0.00]) };
             }
             let settings = cameraSettings[camera.name];
 
@@ -242,7 +242,7 @@ let draw = function (deltaPosition) {
             settings.currentPosition = currentPosition;
 
             // angle cap is the maximum left/right rotation allowed
-            let phi = (Math.PI * 0.06125);
+            let phi = (Math.PI * 0.025);
 
             // compute a central point for the two
             let from = getNodeOrigin (camera.from);
