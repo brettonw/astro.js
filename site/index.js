@@ -43,7 +43,9 @@ let scaleRange = function (range, deadZone) {
 // interesting points in time
 let currentTime;
 let geo_2016_11_1_1200 = computeJ2000 (utc (2016, 11, 1, 18, 0, 0));
-let eclipse2017 = computeJ2000 (utc (2017, 8, 21, 18, 0, 0));
+let eclipse_3_9_2016 = computeJ2000 (utc (2016, 3, 9, 1, 57, 0));
+let eclipse_9_1_2016 = computeJ2000 (utc (2016, 9, 1, 9, 1, 0));
+let eclipse_8_21_2017 = computeJ2000 (utc (2017, 8, 21, 18, 0, 0));
 let dscovrMoonTransit2015 = computeJ2000 (utc (2015, 7, 16, 0, 0, 0));
 let apollo11LandingTime = computeJ2000 (utc (1969, 7, 24, 16, 50, 35));
 
@@ -78,8 +80,14 @@ let draw = function (deltaPosition) {
         case "current":
             currentTime = computeJ2000 (new Date ());
             break;
-        case "eclipse-2017":
-            currentTime = eclipse2017;
+        case "eclipse-2016-03-09":
+            currentTime = eclipse_3_9_2016;
+            break;
+        case "eclipse-2016-09-01":
+            currentTime = eclipse_9_1_2016;
+            break;
+        case "eclipse-2017-08-21":
+            currentTime = eclipse_8_21_2017;
             break;
         case "apollo-11-1969":
             currentTime = apollo11LandingTime;
