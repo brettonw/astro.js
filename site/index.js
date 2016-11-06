@@ -223,34 +223,38 @@ let draw = function (deltaPosition) {
         case "ots": {
             // make sure there is a value for the current position (once per "at")
             if (!(camera.name in cameraSettings)) {
-                cameraSettings[camera.name] = { currentPosition: [-0.75, 0.75] };
+                cameraSettings[camera.name] = { currentPosition: [-0.5, 0.5] };
             }
             let settings = cameraSettings[camera.name];
 
             // update the current controller position and clamp or wrap accordingly
-            let currentPosition = Float2.add (settings.currentPosition, Float2.scale (deltaPosition, 3.0));
+            let currentPosition = Float2.add (settings.currentPosition, [deltaPosition[0] * 3.0, deltaPosition[1] * 2.0]);
             currentPosition[0] = Math.max (Math.min (currentPosition[0], 1.0), -1.0);
             currentPosition[1] = Math.max (Math.min (currentPosition[1], 1.0), -1.0);
             settings.currentPosition = currentPosition;
 
-            // assing an angle cap
-            let angleCap = (Math.PI * 0.06125);
+            // angle cap is the maximum left/right rotation allowed
+            let phi = (Math.PI * 0.06125);
 
             // compute a central point for the two
             let from = getNodeOrigin (camera.from);
-            let fromWeight = 4;
+            let fromBound = getNodeBound (camera.from);
             let at = getNodeOrigin (camera.at);
-            let centralPoint = Float3.scale (Float3.add (Float3.scale (from, fromWeight), at), 1 / (fromWeight + 1));
-
-            // compute a bound on the stabbing camera
-            // XXX for now, we assume the bound on the observed object is 1, but I need to get bounds
-            // XXX on the nodes to be really effective
-            let deltaVector = Float3.subtract (from, centralPoint);
+            let atBound = getNodeBound (camera.at);
+            let deltaVector = Float3.subtract (at, from);
+            let sinPhi = Math.sin (phi);
+            let minH = fromBound / sinPhi;
             let deltaVectorNorm = Float3.norm (deltaVector);
-            let bound = Math.sin (angleCap) * deltaVectorNorm * getNodeBound(camera.from);
+            // XXX minH should be less than deltaVectorNorm, or the problem is ill-formed
+            deltaVector = Float3.scale (deltaVector, 1.0 / deltaVectorNorm);
+            let safeFrom = Float3.add (from, Float3.scale (deltaVector, minH));
+
+            let fromWeight = 7;
+            let centralPoint = Float3.scale (Float3.add (Float3.scale (safeFrom, fromWeight), at), 1 / (fromWeight + 1));
+            let centralPointDistance = Float3.norm (Float3.subtract (centralPoint, from)) + fromBound + 0.1; // the 0.1 is the clipping plane
 
             // compute a few image composition values based off ensuring the pair is fully in view
-            let goalOpposite = bound / ((zoomRangeValue * 0.9) + 0.1);
+            let goalOpposite = fromBound / ((zoomRangeValue * 0.9) + 0.1);
             let tanTheta = Utility.tan (fov / 2.0);
             let distance = goalOpposite / tanTheta;
             //console.log ("distance = " + distance);
@@ -258,10 +262,9 @@ let draw = function (deltaPosition) {
             // get the look from point as an orbit transformation around the look at point
             let lookFromPoint = Float4x4.preMultiply (ORIGIN, Float4x4.chain (
                 //Float4x4.translate ([distance, 0, 0]),
-                Float4x4.translate (Float3.scale (deltaVector, (deltaVectorNorm + distance) / deltaVectorNorm)),
-                Float4x4.translate (Float3.scale ([0, 1, 0], currentPosition[1] * bound * 2.0)),
-                //Float4x4.rotateZ (currentPosition[1] * angleCap * -0.5),
-                Float4x4.rotateY (currentPosition[0] * angleCap * -1),
+                Float4x4.translate (Float3.scale (deltaVector, -1 * (centralPointDistance + distance))),
+                Float4x4.translate (Float3.scale ([0, 1, 0], currentPosition[1] * fromBound * 3.0)),
+                Float4x4.rotateY (currentPosition[0] * phi * -1),
                 Float4x4.translate (centralPoint)
             ));
 
