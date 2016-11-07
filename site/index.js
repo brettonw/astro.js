@@ -274,7 +274,6 @@ let draw = function (deltaPosition) {
 
             // t gets a little bit of scale to account for the FOV
             let t = Math.max (0.4 * oneMinusTanThetaSq, rFromBound);
-            //console.log ("t = " + t);
 
             // compute the actual look at point, and the distance we need to be from it to satisfy
             // all of the conditions thus far
@@ -282,7 +281,6 @@ let draw = function (deltaPosition) {
             distance += (t * deltaVectorNorm) + fromBound + 0.1; // the 0.1 is the clipping plane
 
             // compute the allowable yOffset using t
-            //let yOffset = 2.0 * ((fromBound * (1.0 - t)) + (atBound * t));
             let yOffset = distance * Math.sin (phi / 2.0) * 1.5;
 
             // get the look from point as an orbit transformation around the look at point
