@@ -46,6 +46,7 @@ let geo_2016_11_1_1200 = computeJ2000 (utc (2016, 11, 1, 18, 0, 0));
 let eclipse_3_9_2016 = computeJ2000 (utc (2016, 3, 9, 1, 57, 0));
 let eclipse_9_1_2016 = computeJ2000 (utc (2016, 9, 1, 9, 1, 0));
 let eclipse_8_21_2017 = computeJ2000 (utc (2017, 8, 21, 18, 0, 0));
+let lunar_eclipse_2_10_2017 = computeJ2000 (utc (2017, 2, 10, 22, 34, 0));
 let dscovrMoonTransit2015 = computeJ2000 (utc (2015, 7, 16, 0, 0, 0));
 let apollo11LandingTime = computeJ2000 (utc (1969, 7, 24, 16, 50, 35));
 
@@ -88,6 +89,9 @@ let draw = function (deltaPosition) {
             break;
         case "eclipse-2017-08-21":
             currentTime = eclipse_8_21_2017;
+            break;
+        case "lunar-eclipse-2017-02-10":
+            currentTime = lunar_eclipse_2_10_2017;
             break;
         case "apollo-11-1969":
             currentTime = apollo11LandingTime;
@@ -236,7 +240,7 @@ let draw = function (deltaPosition) {
             let settings = cameraSettings[camera.name];
 
             // update the current controller position and clamp or wrap accordingly
-            let currentPosition = Float2.add (settings.currentPosition, [deltaPosition[0] * 1.50, deltaPosition[1] * 0.75]);
+            let currentPosition = Float2.add (settings.currentPosition, [deltaPosition[0] * 3.0, deltaPosition[1] * 0.75]);
             currentPosition[0] = Math.max (Math.min (currentPosition[0], 1.0), -1.0);
             currentPosition[1] = Math.max (Math.min (currentPosition[1], 1.0), -1.0);
             settings.currentPosition = currentPosition;
@@ -256,7 +260,7 @@ let draw = function (deltaPosition) {
             let goalOpposite = fromBound / ((zoomRangeValue * 0.9) + 0.1);
             let tanTheta = Utility.tan (fov / 2.0);
             let distance = goalOpposite / tanTheta;
-            let oneMinusTanTheta = 1.0 - tanTheta;// * tanTheta;
+            let oneMinusTanThetaSq = 1.0 - (tanTheta * tanTheta);
 //            console.log ("tanTheta = " + tanTheta);
 
             // compute the bounds in unit space, and use that to compute a central point
@@ -267,10 +271,10 @@ let draw = function (deltaPosition) {
             // look right between the two objects, at a minimum
             let left = rFromBound / rAtBound;
             let sinPhi = left / (1 + left);
-            let phi = (Math.asin(rFromBound / sinPhi) * 2.0) / oneMinusTanTheta;
+            let phi = (Math.asin(rFromBound / sinPhi) * 2.0) / oneMinusTanThetaSq;
 
             // t gets a little bit of scale to account for the FOV
-            let t = Math.max (0.4 * oneMinusTanTheta, rFromBound);
+            let t = Math.max (0.4 * oneMinusTanThetaSq, rFromBound);
             console.log ("t = " + t);
 
             // compute the actual look at point, and the distance we need to be from it to satisfy
@@ -280,7 +284,7 @@ let draw = function (deltaPosition) {
 
             // compute the allowable yOffset using t
             //let yOffset = 2.0 * ((fromBound * (1.0 - t)) + (atBound * t));
-            let yOffset = distance * Math.sin (phi / 2.0) * 2.0;
+            let yOffset = distance * Math.sin (phi / 2.0) * 1.5;
 
             // get the look from point as an orbit transformation around the look at point
             let lookFromPoint = Float4x4.preMultiply (ORIGIN, Float4x4.chain (
@@ -664,6 +668,7 @@ let buildScene = function () {
         node.transform = Float4x4.translate (Float3.scale (solarSystem.L1, 0.5));
     });
 
+    /*
     solarSystemScene.addChild (Node.new ({
         name: "test1",
         transform: Float4x4.chain (
@@ -692,6 +697,7 @@ let buildScene = function () {
         shape: "ball-small",
         children: false
     }));
+    */
 
     selectTime ();
 };
