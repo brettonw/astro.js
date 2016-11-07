@@ -256,6 +256,7 @@ let draw = function (deltaPosition) {
             let goalOpposite = fromBound / ((zoomRangeValue * 0.9) + 0.1);
             let tanTheta = Utility.tan (fov / 2.0);
             let distance = goalOpposite / tanTheta;
+            let oneMinusTanTheta = 1.0 - tanTheta;// * tanTheta;
 //            console.log ("tanTheta = " + tanTheta);
 
             // compute the bounds in unit space, and use that to compute a central point
@@ -266,11 +267,10 @@ let draw = function (deltaPosition) {
             // look right between the two objects, at a minimum
             let left = rFromBound / rAtBound;
             let sinPhi = left / (1 + left);
-            let phi = Math.asin(rFromBound / sinPhi) * 2.0;
+            let phi = (Math.asin(rFromBound / sinPhi) * 2.0) / oneMinusTanTheta;
 
             // t gets a little bit of scale to account for the FOV
-            let oneMinusTanTheta = 1.0 - tanTheta;
-            let t = Math.max (0.4 * oneMinusTanTheta * oneMinusTanTheta, rFromBound);
+            let t = Math.max (0.4 * oneMinusTanTheta, rFromBound);
             console.log ("t = " + t);
 
             // compute the actual look at point, and the distance we need to be from it to satisfy
@@ -664,7 +664,6 @@ let buildScene = function () {
         node.transform = Float4x4.translate (Float3.scale (solarSystem.L1, 0.5));
     });
 
-    /*
     solarSystemScene.addChild (Node.new ({
         name: "test1",
         transform: Float4x4.chain (
@@ -693,7 +692,6 @@ let buildScene = function () {
         shape: "ball-small",
         children: false
     }));
-    */
 
     selectTime ();
 };
