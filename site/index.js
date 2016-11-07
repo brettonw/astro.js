@@ -261,7 +261,6 @@ let draw = function (deltaPosition) {
             let tanTheta = Utility.tan (fov / 2.0);
             let distance = goalOpposite / tanTheta;
             let oneMinusTanThetaSq = 1.0 - (tanTheta * tanTheta);
-//            console.log ("tanTheta = " + tanTheta);
 
             // compute the bounds in unit space, and use that to compute a central point
             let rFromBound = fromBound / deltaVectorNorm;
@@ -275,7 +274,7 @@ let draw = function (deltaPosition) {
 
             // t gets a little bit of scale to account for the FOV
             let t = Math.max (0.4 * oneMinusTanThetaSq, rFromBound);
-            console.log ("t = " + t);
+            //console.log ("t = " + t);
 
             // compute the actual look at point, and the distance we need to be from it to satisfy
             // all of the conditions thus far
