@@ -96,7 +96,7 @@
                 <td>Camera</td>
                 <td style="text-align: right;">
                     <select id="cameraTypeSelect" onchange="selectCamera ();">
-                        <option value='{"name":"a", "type":"portrait", "at":"earth", "zoom":0.75, "fov":0.5, "default":[0.00, 0.00]}' selected>Orbit Earth</option>
+                        <option value='{"name":"a", "type":"portrait", "at":"earth", "zoom":0.75, "fov":0.5, "default":[0.00, 0.00]}'>Orbit Earth</option>
                         <option value='{"name":"b", "type":"portrait", "at":"moon", "zoom":0.75, "fov":0.5, "default":[0.00, 0.00]}'>Orbit Moon</option>
                         <option value="" disabled="disabled">—————————————</option>
                         <option value='{"name":"c", "type":"fixed", "from":"moon", "at":"earth", "fov":0.9}'>Moon at Earth</option>
@@ -123,8 +123,12 @@
                         <option value="" disabled="disabled">—————————————</option>
                         <option value='{"name":"r", "type":"ots", "from":"moon", "at":"earth", "zoom":0.5, "fov":0.75, "default":[-0.30, 0.40]}'>OTS Moon at Earth</option>
                         <option value='{"name":"s", "type":"ots", "from":"earth", "at":"moon", "zoom":0.5, "fov":0.75, "default":[-0.75, 0.50]}'>OTS Earth at Moon</option>
-                        <option value='{"name":"t", "type":"ots", "from":"GOES13", "at":"earth", "zoom":0.5, "fov":0.5, "default":[-0.35, 0.75]}'>OTS GOES13 at Earth</option>
-                        <option value='{"name":"u", "type":"ots", "from":"GOES15", "at":"earth", "zoom":0.5, "fov":0.5, "default":[-0.35, 0.75]}'>OTS GOES15 at Earth</option>
+                        <option value='{"name":"t", "type":"ots", "from":"GOES13", "at":"earth", "zoom":0.5, "fov":0.5, "default":[-0.10, 0.05]}'>OTS GOES13 at Earth</option>
+                        <option value='{"name":"u", "type":"ots", "from":"GOES15", "at":"earth", "zoom":0.5, "fov":0.5, "default":[-0.10, 0.05]}'>OTS GOES15 at Earth</option>
+                        <option value="" disabled="disabled">—————————————</option>
+                        <!--
+                        <option value='{"name":"v", "type":"ots", "from":"test1", "at":"test2", "zoom":0.5, "fov":0.5, "default":[-0.3333, 0.3333]}' selected>OTS Test</option>
+                        -->
                     </select>
                 </td>
             </tr>

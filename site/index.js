@@ -236,42 +236,57 @@ let draw = function (deltaPosition) {
             let settings = cameraSettings[camera.name];
 
             // update the current controller position and clamp or wrap accordingly
-            let currentPosition = Float2.add (settings.currentPosition, [deltaPosition[0] * 3.0, deltaPosition[1] * 2.0]);
+            let currentPosition = Float2.add (settings.currentPosition, [deltaPosition[0] * 1.50, deltaPosition[1] * 0.75]);
             currentPosition[0] = Math.max (Math.min (currentPosition[0], 1.0), -1.0);
             currentPosition[1] = Math.max (Math.min (currentPosition[1], 1.0), -1.0);
             settings.currentPosition = currentPosition;
 
-            // angle cap is the maximum left/right rotation allowed
-            let phi = (Math.PI * 0.025);
-
-            // compute a central point for the two
+            // get the points and bounds for the view
             let from = getNodeOrigin (camera.from);
             let fromBound = getNodeBound (camera.from);
             let at = getNodeOrigin (camera.at);
             let atBound = getNodeBound (camera.at);
-            let deltaVector = Float3.subtract (at, from);
-            let sinPhi = Math.sin (phi);
-            let minH = fromBound / sinPhi;
-            let deltaVectorNorm = Float3.norm (deltaVector);
-            // XXX minH should be less than deltaVectorNorm, or the problem is ill-formed
-            deltaVector = Float3.scale (deltaVector, 1.0 / deltaVectorNorm);
-            let safeFrom = Float3.add (from, Float3.scale (deltaVector, minH));
 
-            let fromWeight = 7;
-            let centralPoint = Float3.scale (Float3.add (Float3.scale (safeFrom, fromWeight), at), 1 / (fromWeight + 1));
-            let centralPointDistance = Float3.norm (Float3.subtract (centralPoint, from)) + fromBound + 0.1; // the 0.1 is the clipping plane
+            // compute the delta vector and its length
+            let deltaVector = Float3.subtract (at, from);
+            let deltaVectorNorm = Float3.norm (deltaVector);
+            deltaVector = Float3.scale (deltaVector, 1.0 / deltaVectorNorm);
 
             // compute a few image composition values based off ensuring the pair is fully in view
             let goalOpposite = fromBound / ((zoomRangeValue * 0.9) + 0.1);
             let tanTheta = Utility.tan (fov / 2.0);
             let distance = goalOpposite / tanTheta;
-            //console.log ("distance = " + distance);
+//            console.log ("tanTheta = " + tanTheta);
+
+            // compute the bounds in unit space, and use that to compute a central point
+            let rFromBound = fromBound / deltaVectorNorm;
+            let rAtBound = atBound / deltaVectorNorm;
+
+            // angle cap is the maximum left/right rotation allowed, based on the angle necessary to
+            // look right between the two objects, at a minimum
+            let left = rFromBound / rAtBound;
+            let sinPhi = left / (1 + left);
+            let phi = Math.asin(rFromBound / sinPhi) * 2.0;
+
+            // t gets a little bit of scale to account for the FOV
+            let oneMinusTanTheta = 1.0 - tanTheta;
+            let t = Math.max (0.4 * oneMinusTanTheta * oneMinusTanTheta, rFromBound);
+            console.log ("t = " + t);
+
+            // compute the actual look at point, and the distance we need to be from it to satisfy
+            // all of the conditions thus far
+            let centralPoint = Float3.add (Float3.scale (from, 1.0 - t), Float3.scale (at, t));
+            distance += (t * deltaVectorNorm) + fromBound + 0.1; // the 0.1 is the clipping plane
+
+            // compute the allowable yOffset using t
+            //let yOffset = 2.0 * ((fromBound * (1.0 - t)) + (atBound * t));
+            let yOffset = distance * Math.sin (phi / 2.0) * 2.0;
 
             // get the look from point as an orbit transformation around the look at point
             let lookFromPoint = Float4x4.preMultiply (ORIGIN, Float4x4.chain (
                 //Float4x4.translate ([distance, 0, 0]),
-                Float4x4.translate (Float3.scale (deltaVector, -1 * (centralPointDistance + distance))),
-                Float4x4.translate (Float3.scale ([0, 1, 0], currentPosition[1] * fromBound * 3.0)),
+                Float4x4.translate (Float3.scale (deltaVector, -1 * distance)),
+                Float4x4.translate (Float3.scale ([0, 1, 0], currentPosition[1] * yOffset)),
                 Float4x4.rotateY (currentPosition[0] * phi * -1),
                 Float4x4.translate (centralPoint)
             ));
@@ -648,6 +663,37 @@ let buildScene = function () {
         let node = Node.get (this.node);
         node.transform = Float4x4.translate (Float3.scale (solarSystem.L1, 0.5));
     });
+
+    /*
+    solarSystemScene.addChild (Node.new ({
+        name: "test1",
+        transform: Float4x4.chain (
+            Float4x4.scale (0.25),
+            Float4x4.translate ([5, 0, 0])
+        ),
+        state: function (standardUniforms) {
+            Program.get ("basic").use ();
+            standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
+            standardUniforms.MODEL_COLOR = [1.0, 0.5, 1.0];
+        },
+        shape: "ball-small",
+        children: false
+    }));
+
+    solarSystemScene.addChild (Node.new ({
+        name: "test2",
+        transform: Float4x4.chain (
+            Float4x4.scale (0.25),
+            Float4x4.translate ([5, 0, 2])
+        ),
+        state: function (standardUniforms) {
+            Program.get ("basic").use ();
+            standardUniforms.MODEL_COLOR = [1.0, 1.0, 0.5];
+        },
+        shape: "ball-small",
+        children: false
+    }));
+    */
 
     selectTime ();
 };
