@@ -662,7 +662,7 @@ let buildScene = function () {
         // get the node, and set the L1 transform - because our system is scaled around the
         // earth/moon region, we scale this down to fit...
         let node = Node.get (this.node);
-        node.transform = Float4x4.translate (Float3.scale (solarSystem.L1, 0.5));
+        node.transform = Float4x4.translate (Float3.scale (solarSystem.L1, 0.66));
     });
 
     /*

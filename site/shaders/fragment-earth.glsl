@@ -25,6 +25,10 @@ vec3 screenColor (const in vec3 left, const in vec3 right) {
     return result;
 }
 
+vec3 smoothmix (const in vec3 a, const in vec3 b, const in float t) {
+    return mix (a, b, smoothstep (0.0, 1.0, t));
+}
+
 void main(void) {
     // compute the core vectors we'll need
 	vec3 viewVector = normalize (cameraPosition - model);
@@ -50,7 +54,7 @@ void main(void) {
     nightTxColor = nightTxColor * cosViewNormalAngle;
 
     // the two colors are blended by the daytime scale
-    vec3 groundColor = mix (nightTxColor, dayTxColor, sqrt (daytimeScale));
+    vec3 groundColor = smoothmix (nightTxColor, dayTxColor, sqrt (daytimeScale));
 
     // compute the specular contribution
     float specularExp = 8.0;

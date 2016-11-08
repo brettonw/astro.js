@@ -12,6 +12,10 @@ varying vec3 model;
 varying vec3 normal;
 varying vec2 texture;
 
+vec3 smoothmix (const in vec3 a, const in vec3 b, const in float t) {
+    return mix (a, b, smoothstep (0.0, 1.0, t));
+}
+
 void main(void) {
 	vec3 v = normalize (cameraPosition - model);
     vec3 n = normalize ((normalMatrix * vec4 (normal, 0)).xyz);
@@ -35,7 +39,7 @@ void main(void) {
     //daytimeScale *= daytimeScale;
 
 	// the sky color is faded out according to the proximity to the day/night boundary
-	vec3 daytimeLightColor = mix(vec3 (1.0, 0.85, 0.7), vec3 (0.7, 0.85, 1.0), daytimeScale);
-	float atmosphere = atmosphereTravelDistance * atmosphereTravelDistance * outputAlpha * sqrt (daytimeScale);
+	vec3 daytimeLightColor = smoothmix (vec3 (1.0, 0.85, 0.7), vec3 (0.7, 0.85, 1.0), daytimeScale);
+	float atmosphere = atmosphereTravelDistance * atmosphereTravelDistance * outputAlpha * daytimeScale;
 	gl_FragColor = vec4 (daytimeLightColor, atmosphere);
 }

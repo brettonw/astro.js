@@ -9,9 +9,8 @@ varying vec3 model;
 varying vec3 normal;
 varying vec2 texture;
 
-float smoothmix (const in vec3 a, const in vec3 b, const in float t) {
-    float sm = smoothstep (0, 1, t);
-    return mix (a, b, t);
+vec3 smoothmix (const in vec3 a, const in vec3 b, const in float t) {
+    return mix (a, b, smoothstep (0.0, 1.0, t));
 }
 
 void main(void) {
@@ -21,6 +20,6 @@ void main(void) {
     float alpha = texture2D(textureSampler, texture).r;
 
     // note: we dim the clouds just a tad to match imagery from EPIC (http://epic.gsfc.nasa.gov/)
-	vec3 daytimeLightColor = mix(vec3 (1.0, 0.85, 0.7), vec3 (1.0, 1.0, 1.0), daytimeScale) * daytimeScale * 0.95;
+	vec3 daytimeLightColor = smoothmix(vec3 (1.0, 0.85, 0.7), vec3 (1.0, 1.0, 1.0), daytimeScale) * (daytimeScale * 0.95);
     gl_FragColor = vec4 (daytimeLightColor, outputAlpha * alpha);
 }
