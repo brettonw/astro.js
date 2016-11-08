@@ -9,6 +9,11 @@ varying vec3 model;
 varying vec3 normal;
 varying vec2 texture;
 
+float smoothmix (const in vec3 a, const in vec3 b, const in float t) {
+    float sm = smoothstep (0, 1, t);
+    return mix (a, b, t);
+}
+
 void main(void) {
     vec3 normalVector = normalize ((normalMatrix * vec4 (normal, 0.0)).xyz);
 	float cosLightNormalAngle = dot(normalVector, lightDirection);

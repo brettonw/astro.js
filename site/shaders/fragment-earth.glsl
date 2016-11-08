@@ -50,7 +50,7 @@ void main(void) {
     nightTxColor = nightTxColor * cosViewNormalAngle;
 
     // the two colors are blended by the daytime scale
-    vec3 groundColor = mix (nightTxColor, dayTxColor, daytimeScale);
+    vec3 groundColor = mix (nightTxColor, dayTxColor, sqrt (daytimeScale));
 
     // compute the specular contribution
     float specularExp = 8.0;
