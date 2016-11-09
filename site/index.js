@@ -470,7 +470,9 @@ let buildScene = function () {
     });
     starsScene.addChild (sunNode);
 
-    Thing.new ("sun", "sun", function (time) {
+    Thing.new ({
+        node: "sun",
+        update: function (time) {
         // get the node
         let node = Node.get (this.node);
 
@@ -483,7 +485,7 @@ let buildScene = function () {
         // compute the position of the sun, and update the lighting direction
         node.transform = Float4x4.multiply (Float4x4.scale (sunScale), Float4x4.translate (sunPosition));
         standardUniforms.LIGHT_DIRECTION = solarSystem.sunDirection;
-    });
+    }}, "sun");
 
     // now the solar system
     solarSystemScene = Node.new ({
@@ -510,7 +512,9 @@ let buildScene = function () {
     });
     solarSystemScene.addChild (moonNode);
 
-    Thing.new ("moon", "moon", function (time) {
+    Thing.new ({
+        node:"moon",
+        update: function (time) {
         // get the node
         let node = Node.get (this.node);
 
@@ -520,7 +524,7 @@ let buildScene = function () {
             Float4x4.rotateXAxisTo (solarSystem.moonDirection),
             Float4x4.translate (Float3.scale (solarSystem.moonDirection, (closeMoonCheckbox.checked ? 0.25 : 1) * solarSystem.moonR))
         );
-    });
+    }}, "moon");
 
     // add the apollo 11 landing site
     addGeoMarker (moonNode, "apollo 11", 1.001, 0.67409, 23.47298);
@@ -637,12 +641,14 @@ let buildScene = function () {
     });
     earthRenderNode.addChild (atmosphereNode);
 
-    Thing.new ("world", "world", function (time) {
+    Thing.new ({
+        node:"world",
+        update: function (time) {
         // get the node
         let node = Node.get (this.node);
         let gmst = computeGmstFromJ2000 (time);
         node.transform = Float4x4.rotateY (Utility.degreesToRadians (gmst));
-    });
+    }}, "world");
 
     let dscovrNode = Node.new ({
         name: "DSCOVR",
@@ -658,12 +664,14 @@ let buildScene = function () {
     });
     solarSystemScene.addChild (dscovrNode);
 
-    Thing.new ("DSCOVR", "DSCOVR", function (time) {
+    Thing.new ({
+        node:"DSCOVR",
+        update:function (time) {
         // get the node, and set the L1 transform - because our system is scaled around the
         // earth/moon region, we scale this down to fit...
         let node = Node.get (this.node);
         node.transform = Float4x4.translate (Float3.scale (solarSystem.L1, 0.5));
-    });
+    }}, "DSCOVR");
 
     /*
     solarSystemScene.addChild (Node.new ({
@@ -748,20 +756,20 @@ let onBodyLoad = function () {
         .addVertexShaders ("basic")
         .addFragmentShaders (["basic", "basic-texture", "color", "overlay", "texture"])
         .go (null, OnReady.new (null, function (x) {
-            Program.new ("basic");
-            Program.new ("basic-texture", { vertexShader: "basic" });
-            Program.new ("color", { vertexShader: "basic" });
-            Program.new ("overlay", { vertexShader: "basic" });
-            Program.new ("texture", { vertexShader: "basic" });
+            Program.new ({}, "basic");
+            Program.new ({ vertexShader: "basic" }, "basic-texture");
+            Program.new ({ vertexShader: "basic" }, "color");
+            Program.new ({ vertexShader: "basic" }, "overlay");
+            Program.new ({ vertexShader: "basic" }, "texture");
 
             // load the astro specific shaders, and build the programs
             LoaderShader.new ("shaders/@.glsl")
                 .addFragmentShaders (["earth", "clouds", "atmosphere", "hardlight"])
                 .go (null, OnReady.new (null, function (x) {
-                    Program.new ("earth", { vertexShader: "basic" });
-                    Program.new ("clouds", { vertexShader: "basic" });
-                    Program.new ("atmosphere", { vertexShader: "basic" });
-                    Program.new ("hardlight", { vertexShader: "basic" });
+                    Program.new ({ vertexShader: "basic" }, "earth");
+                    Program.new ({ vertexShader: "basic" }, "clouds");
+                    Program.new ({ vertexShader: "basic" }, "atmosphere");
+                    Program.new ({ vertexShader: "basic" }, "hardlight");
 
                     // load the textures
                     LoaderPath.new ({ type: Texture, path: "textures/@.png" })
