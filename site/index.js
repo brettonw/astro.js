@@ -434,7 +434,6 @@ let buildScene = function () {
         Float4x4.scale (-starSphereRadius)
     );
     starsNode = Node.new ({
-        name: "stars",
         transform: starsTransform,
         state: function (standardUniforms) {
             Program.get ("texture").use ();
@@ -442,11 +441,10 @@ let buildScene = function () {
             standardUniforms.OUTPUT_ALPHA_PARAMETER = starsNode.alpha;
         },
         shape: "ball"
-    });
+    }, "stars");
     starsScene.addChild (starsNode);
 
     constellationsNode = Node.new ({
-        name: "constellations",
         state: function (standardUniforms) {
             Program.get ("overlay").use ();
             standardUniforms.OUTPUT_ALPHA_PARAMETER = starsNode.alpha * 0.25;
@@ -454,11 +452,10 @@ let buildScene = function () {
         },
         shape: "ball",
         children: false
-    });
+    }, "constellations");
     starsNode.addChild (constellationsNode);
 
     let sunNode = Node.new ({
-        name: "sun",
         transform: Float4x4.IDENTITY,
         state: function (standardUniforms) {
             Program.get ("color").use ();
@@ -467,7 +464,7 @@ let buildScene = function () {
         },
         shape: "ball",
         children: false
-    });
+    }, "sun");
     starsScene.addChild (sunNode);
 
     Thing.new ({
@@ -496,7 +493,6 @@ let buildScene = function () {
     });
 
     let moonNode = Node.new ({
-        name: "moon",
         transform: Float4x4.IDENTITY,
         state: function (standardUniforms) {
             Program.get ("basic-texture").use ();
@@ -509,7 +505,7 @@ let buildScene = function () {
             standardUniforms.SPECULAR_EXPONENT = 8.0;
         },
         shape: "ball-small"
-    });
+    }, "moon");
     solarSystemScene.addChild (moonNode);
 
     Thing.new ({
@@ -531,15 +527,13 @@ let buildScene = function () {
     addGeoMarker (moonNode, "apollo 11-y", 1.1, 0.67409, 23.47298);
 
     let worldNode = Node.new ({
-        name: "world",
         transform: Float4x4.IDENTITY
-    });
+    }, "world");
     solarSystemScene.addChild (worldNode);
 
     let useTest = false;
 
     let testNode = Node.new ({
-        name: "test",
         transform: Float4x4.IDENTITY,
         state: function (standardUniforms) {
             Program.get ("hardlight").use ();
@@ -552,7 +546,7 @@ let buildScene = function () {
         shape: "ball",
         enabled: useTest,
         children: false
-    });
+    }, "test");
     worldNode.addChild (testNode);
 
     let earthRenderNode = Node.new ({
@@ -561,7 +555,6 @@ let buildScene = function () {
     worldNode.addChild (earthRenderNode);
 
     let earthNode = Node.new ({
-        name: "earth",
         state: function (standardUniforms) {
             Program.get ("earth").use ()
                 .setDayTxSampler ("earth-day")
@@ -570,7 +563,7 @@ let buildScene = function () {
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
         },
         shape: "ball"
-    });
+    }, "earth");
     earthRenderNode.addChild (earthNode);
 
     // add geostationary satellites (orbit over equator at altitude of ~35,780 km)
@@ -589,7 +582,6 @@ let buildScene = function () {
             Float4x4.rotateY (Utility.degreesToRadians (180 + longitude))
         );
         let geoNode = Node.new ({
-            name: name,
             transform: geoTransform,
             state: function (standardUniforms) {
                 Program.get ("basic").use ();
@@ -597,7 +589,7 @@ let buildScene = function () {
             },
             shape: "ball-small",
             children: false
-        });
+        }, name);
         earthRenderNode.addChild (geoNode);
     };
     addGeoSatellite ("MSG3", 0.0);
@@ -614,7 +606,6 @@ let buildScene = function () {
     // clouds at 40km is a bit on the high side..., but it shows well
     let cloudHeight = (40 + earthRadius) / earthRadius;
     cloudsNode = Node.new ({
-        name: "clouds",
         transform: Float4x4.scale (cloudHeight),
         state: function (standardUniforms) {
             Program.get ("clouds").use ();
@@ -623,13 +614,12 @@ let buildScene = function () {
         },
         shape: "ball",
         children: false
-    });
+    }, "clouds");
     earthRenderNode.addChild (cloudsNode);
 
     // atmosphere at 160km is actually in about the right place
     let atmosphereDepth = (160 + earthRadius) / earthRadius;
     atmosphereNode = Node.new ({
-        name: "clouds",
         transform: Float4x4.scale (atmosphereDepth),
         state: function (standardUniforms) {
             Program.get ("atmosphere").use ()
@@ -638,7 +628,7 @@ let buildScene = function () {
         },
         shape: "ball",
         children: false
-    });
+    }, "atmosphere");
     earthRenderNode.addChild (atmosphereNode);
 
     Thing.new ({
@@ -651,7 +641,6 @@ let buildScene = function () {
     }}, "world");
 
     let dscovrNode = Node.new ({
-        name: "DSCOVR",
         transform: Float4x4.identity,
         /*
          state: function (standardUniforms) {
@@ -661,7 +650,7 @@ let buildScene = function () {
          shape: "ball-small",
          */
         children: false
-    });
+    }, "DSCOVR");
     solarSystemScene.addChild (dscovrNode);
 
     Thing.new ({
