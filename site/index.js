@@ -72,36 +72,12 @@ let draw = function (deltaPosition) {
         case "current":
             currentTime = computeJ2000 (new Date ());
             break;
-        case "j2000":
-            currentTime = 0;
+        default: {
+            // allow for some default values for time
+            let parts = (timeType.value + ".0.0.0").split(".");
+            currentTime = computeJ2000 (utc (parseInt (parts[0]), parseInt (parts[1]), parseInt (parts[2]), parseInt (parts[3]), parseInt (parts[4]), parseFloat (parts[5])));
             break;
-        case "eclipse-2005-10-03":
-            currentTime = computeJ2000 (utc (2005, 10, 3, 10, 31, 0));
-            break;
-        case "eclipse-2016-03-09":
-            currentTime = computeJ2000 (utc (2016, 3, 9, 1, 57, 0));
-            break;
-        case "eclipse-2016-09-01":
-            currentTime = computeJ2000 (utc (2016, 9, 1, 9, 1, 0));
-            break;
-        case "eclipse-2017-08-21":
-            currentTime = computeJ2000 (utc (2017, 8, 21, 18, 0, 0));
-            break;
-        case "lunar-eclipse-2017-02-10":
-            currentTime = computeJ2000 (utc (2017, 2, 10, 22, 34, 0));
-            break;
-        case "apollo-11-1969":
-            currentTime = computeJ2000 (utc (1969, 7, 24, 16, 50, 35));
-            break;
-        case "DSCOVR-2015":
-            currentTime = computeJ2000 (utc (2015, 7, 16, 0, 0, 0));
-            break;
-        case "2016111-1200":
-            currentTime = computeJ2000 (utc (2016, 11, 1, 18, 0, 0));
-            break;
-        case "20050901-0000":
-            currentTime = computeJ2000 (utc (2005, 9, 1, 0, 0, 0));
-            break;
+        }
     }
     let hourDelta = scaleRange (timeRange, 0.0) * 2.0;
     let dayDelta = scaleRange (dayRange, 0.0) * 180.0;
@@ -501,8 +477,8 @@ let buildScene = function () {
             //standardUniforms.TEXTURE_SAMPLER = "tissot";
             standardUniforms.TEXTURE_SAMPLER = "moon";
             standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
-            standardUniforms.AMBIENT_CONTRIBUTION = 0.1;
-            standardUniforms.DIFFUSE_CONTRIBUTION = 0.9;
+            standardUniforms.AMBIENT_CONTRIBUTION = 0.05;
+            standardUniforms.DIFFUSE_CONTRIBUTION = 0.95;
             standardUniforms.SPECULAR_CONTRIBUTION = 0.05;
             standardUniforms.SPECULAR_EXPONENT = 8.0;
         },
