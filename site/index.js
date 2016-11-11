@@ -5,28 +5,13 @@ let solarSystemScene;
 
 let standardUniforms = Object.create (null);
 
-let timeType;
-let showStarsCheckbox;
-let showConstellationsCheckbox;
-let showCloudsCheckbox;
-let showAtmosphereCheckbox;
-let closeMoonCheckbox;
-let zoomRange;
-let fovRange;
-let cameraType;
-
 let camera;
 let cameraSettings = Object.create (null);
-
-let timeRange;
-let dayRange;
 
 let starsNode;
 let constellationsNode;
 let cloudsNode;
 let atmosphereNode;
-
-let timeDisplay;
 
 let solarSystem = Object.create (null);
 
@@ -54,6 +39,23 @@ let getNodeBound = function (nodeName) {
     return Float3.norm (deltaVector);
 };
 
+let Doc = function () {
+    let _ = Object.create (ClassBase);
+    _.construct = function (parameters) {};
+    _.element = function (id) {
+        this[id] = document.getElementById(id);
+        return this;
+    };
+    _.elements = function (...ids) {
+        for (let id of ids) {
+            this.element (id);
+        }
+        return this;
+    };
+    return _;
+} ();
+let doc;
+
 let refreshTimeoutId = 0;
 let currentTime;
 let draw = function (deltaPosition) {
@@ -66,7 +68,7 @@ let draw = function (deltaPosition) {
     }, 1000 * 60);
 
     // determine how to set the clock
-    switch (timeType.value) {
+    switch (doc.timeTypeSelect.value) {
         case "paused":
             break;
         case "current":
@@ -74,26 +76,26 @@ let draw = function (deltaPosition) {
             break;
         default: {
             // allow for some default values for time
-            let parts = (timeType.value + ".0.0.0").split(".");
+            let parts = (doc.timeTypeSelect.value + ".0.0.0").split(".");
             currentTime = computeJ2000 (utc (parseInt (parts[0]), parseInt (parts[1]), parseInt (parts[2]), parseInt (parts[3]), parseInt (parts[4]), parseFloat (parts[5])));
             break;
         }
     }
-    let hourDelta = scaleRange (timeRange, 0.0) * 2.0;
-    let dayDelta = scaleRange (dayRange, 0.0) * 180.0;
+    let hourDelta = scaleRange (doc.timeRange, 0.0) * 2.0;
+    let dayDelta = scaleRange (doc.dayRange, 0.0) * 180.0;
     let displayTime = currentTime + dayDelta + hourDelta;
     updateSolarSystem (displayTime);
     Thing.updateAll (displayTime);
 
     // XXX convert from our display time to a Javascript Date
-    timeDisplay.innerHTML = displayTime.toFixed (4) + " (" + currentTime.toFixed (4) + ", " + (dayDelta + hourDelta).toFixed (4) + ")";
+    doc.timeDisplay.innerHTML = displayTime.toFixed (4) + " (" + currentTime.toFixed (4) + ", " + (dayDelta + hourDelta).toFixed (4) + ")";
 
     // set up the view parameters
-    let zoomRangeValue = zoomRange.value;
+    let zoomRangeValue = doc.zoomRange.value;
     zoomRangeValue *= 0.01;
     let zoomRangeValueInverse = 1.0 - zoomRangeValue;
 
-    let fovRangeValue = fovRange.value;
+    let fovRangeValue = doc.fovRange.value;
     fovRangeValue *= 0.01;
     let fovRangeValueInverse = 1.0 - fovRangeValue;
     starsNode.alpha = Math.sqrt (fovRangeValueInverse);
@@ -278,8 +280,8 @@ let draw = function (deltaPosition) {
 
 
     // update the visibility layers
-    starsNode.enabled = showStarsCheckbox.checked;
-    constellationsNode.enabled = showConstellationsCheckbox.checked;
+    starsNode.enabled = doc.showStarsCheckbox.checked;
+    constellationsNode.enabled = doc.showConstellationsCheckbox.checked;
 
     // ordinarily, webGl will automatically present and clear when we return control to the
     // event loop from the draw function, but we overrode that to have explicit control.
@@ -297,8 +299,8 @@ let draw = function (deltaPosition) {
     starsScene.traverse (standardUniforms);
 
     // update the visibility layers
-    cloudsNode.enabled = showCloudsCheckbox.checked;
-    atmosphereNode.enabled = showAtmosphereCheckbox.checked;
+    cloudsNode.enabled = doc.showCloudsCheckbox.checked;
+    atmosphereNode.enabled = doc.showAtmosphereCheckbox.checked;
 
     // set up to draw the solar system
     standardUniforms.VIEW_MATRIX_PARAMETER = viewMatrix;
@@ -321,14 +323,14 @@ let draw = function (deltaPosition) {
 
 let lastTimeType = "current";
 let selectTime = function () {
-    let newTimeType = timeType.value;
-    let newTimeTypeIndex = timeType.selectedIndex;
+    let newTimeType = doc.timeTypeSelect.value;
+    let newTimeTypeIndex = doc.timeTypeSelect.selectedIndex;
     let reset = false;
     switch (newTimeType) {
         case "reset":
             // reset the time sliders and bounce back to whatever the setting was
             reset = true;
-            timeType.value = lastTimeType;
+            doc.timeTypeSelect.value = lastTimeType;
             break;
         case "current":
             // if we come here from anything but paused, we want to reset the time sliders
@@ -338,7 +340,7 @@ let selectTime = function () {
         case "paused":
             // if it wasn't current, bounce back to whatever the setting was
             if (lastTimeType != "current") {
-                timeType.value = lastTimeType;
+                doc.timeTypeSelect.value = lastTimeType;
             }
             break;
         default:
@@ -349,19 +351,19 @@ let selectTime = function () {
     }
 
     if (reset) {
-        timeRange.value = timeRange.max / 2;
-        dayRange.value = dayRange.max / 2;
+        doc.timeRange.value = doc.timeRange.max / 2;
+        doc.dayRange.value = doc.dayRange.max / 2;
     }
 
     draw ([0, 0]);
 };
 
 let extractCamera = function () {
-    camera = JSON.parse (cameraType.value);
+    camera = JSON.parse (doc.cameraTypeSelect.value);
     camera.fov = Utility.defaultValue (camera.fov, 0.5);
-    fovRange.value = fovRange.max * camera.fov;
+    doc.fovRange.value = doc.fovRange.max * camera.fov;
     camera.zoom = Utility.defaultValue (camera.zoom, 0.5);
-    zoomRange.value = zoomRange.max * camera.zoom;
+    doc.zoomRange.value = doc.zoomRange.max * camera.zoom;
     camera.up = Utility.defaultValue (camera.up, "y-up");
 };
 
@@ -497,7 +499,7 @@ let buildScene = function () {
             Float4x4.scale (moonScale),
             Float4x4.rotateY (solarSystem.moonTheta),
             //Float4x4.rotateXAxisTo (solarSystem.moonDirection),
-            Float4x4.translate (Float3.scale (solarSystem.moonDirection, (closeMoonCheckbox.checked ? 0.25 : 1) * solarSystem.moonR))
+            Float4x4.translate (Float3.scale (solarSystem.moonDirection, (doc.closeMoonCheckbox.checked ? 0.25 : 1) * solarSystem.moonR))
         );
     }}, "moon");
 
@@ -678,9 +680,9 @@ let buildScene = function () {
 let mouseWheel = function (event) {
     //console.log ("e: " + event.wheelDelta);
     if (event.wheelDelta > 0) {
-        fovRange.stepUp (1);
+        doc.fovRange.stepUp (1);
     } else if (event.wheelDelta < 0) {
-        fovRange.stepDown (1);
+        doc.fovRange.stepDown (1);
     }
     draw ([0, 0]);
     return (event.returnValue = false);
@@ -705,19 +707,11 @@ let onBodyLoad = function () {
     standardUniforms.AMBIENT_LIGHT_COLOR = [1.0, 1.0, 1.0];
     standardUniforms.LIGHT_COLOR = [1.0, 1.0, 1.0];
 
-    timeDisplay = document.getElementById ("timeDisplay");
-    timeType = document.getElementById ("timeTypeSelect");
-    showStarsCheckbox = document.getElementById ("showStarsCheckbox");
-    showConstellationsCheckbox = document.getElementById ("showConstellationsCheckbox");
-    showCloudsCheckbox = document.getElementById ("showCloudsCheckbox");
-    showAtmosphereCheckbox = document.getElementById ("showAtmosphereCheckbox");
-    closeMoonCheckbox = document.getElementById ("closeMoonCheckbox");
-    zoomRange = document.getElementById ("zoomRange");
-    fovRange = document.getElementById ("fovRange");
-    cameraType = document.getElementById ("cameraTypeSelect");
+    doc = Doc.new ().elements ("timeTypeSelect", "showStarsCheckbox", "showConstellationsCheckbox",
+        "showCloudsCheckbox", "showAtmosphereCheckbox", "closeMoonCheckbox", "zoomRange", "fovRange",
+        "cameraTypeSelect", "timeDisplay", "timeRange", "dayRange");
+
     extractCamera ();
-    timeRange = document.getElementById ("timeRange");
-    dayRange = document.getElementById ("dayRange");
 
     // load the basic shaders from the original soure
     LoaderShader.new ("http://webgl-js.azurewebsites.net/site/shaders/@.glsl")
