@@ -40,16 +40,6 @@ let scaleRange = function (range, deadZone) {
     return (Math.sign (rangeValue) * rawOffset) / rangeMid;
 };
 
-// interesting points in time
-let currentTime;
-let geo_2016_11_1_1200 = computeJ2000 (utc (2016, 11, 1, 18, 0, 0));
-let eclipse_3_9_2016 = computeJ2000 (utc (2016, 3, 9, 1, 57, 0));
-let eclipse_9_1_2016 = computeJ2000 (utc (2016, 9, 1, 9, 1, 0));
-let eclipse_8_21_2017 = computeJ2000 (utc (2017, 8, 21, 18, 0, 0));
-let lunar_eclipse_2_10_2017 = computeJ2000 (utc (2017, 2, 10, 22, 34, 0));
-let dscovrMoonTransit2015 = computeJ2000 (utc (2015, 7, 16, 0, 0, 0));
-let apollo11LandingTime = computeJ2000 (utc (1969, 7, 24, 16, 50, 35));
-
 const ORIGIN = [0, 0, 0, 1];
 let getNodeOrigin = function (nodeName) {
     return Float4x4.preMultiply (ORIGIN, Node.get (nodeName).getTransform ())
@@ -65,6 +55,7 @@ let getNodeBound = function (nodeName) {
 };
 
 let refreshTimeoutId = 0;
+let currentTime;
 let draw = function (deltaPosition) {
     // ensure the draw function is called about once per minute to keep the display refreshed
     if (refreshTimeoutId != 0) {
@@ -81,25 +72,36 @@ let draw = function (deltaPosition) {
         case "current":
             currentTime = computeJ2000 (new Date ());
             break;
+        case "j2000":
+            currentTime = 0;
+            break;
+        case "eclipse-2005-10-03":
+            currentTime = computeJ2000 (utc (2005, 10, 3, 10, 31, 0));
+            break;
         case "eclipse-2016-03-09":
-            currentTime = eclipse_3_9_2016;
+            currentTime = computeJ2000 (utc (2016, 3, 9, 1, 57, 0));
             break;
         case "eclipse-2016-09-01":
-            currentTime = eclipse_9_1_2016;
+            currentTime = computeJ2000 (utc (2016, 9, 1, 9, 1, 0));
             break;
         case "eclipse-2017-08-21":
-            currentTime = eclipse_8_21_2017;
+            currentTime = computeJ2000 (utc (2017, 8, 21, 18, 0, 0));
             break;
         case "lunar-eclipse-2017-02-10":
-            currentTime = lunar_eclipse_2_10_2017;
+            currentTime = computeJ2000 (utc (2017, 2, 10, 22, 34, 0));
             break;
         case "apollo-11-1969":
-            currentTime = apollo11LandingTime;
+            currentTime = computeJ2000 (utc (1969, 7, 24, 16, 50, 35));
             break;
         case "DSCOVR-2015":
-            currentTime = dscovrMoonTransit2015;
+            currentTime = computeJ2000 (utc (2015, 7, 16, 0, 0, 0));
+            break;
         case "2016111-1200":
-            currentTime = geo_2016_11_1_1200;
+            currentTime = computeJ2000 (utc (2016, 11, 1, 18, 0, 0));
+            break;
+        case "20050901-0000":
+            currentTime = computeJ2000 (utc (2005, 9, 1, 0, 0, 0));
+            break;
     }
     let hourDelta = scaleRange (timeRange, 0.0) * 2.0;
     let dayDelta = scaleRange (dayRange, 0.0) * 180.0;
@@ -400,7 +402,6 @@ let addGeoMarker = function (node, name, radius, latitude, longitude) {
         Float4x4.rotateY (Utility.degreesToRadians (180 + longitude))
     );
     let geoMarkerNode = Node.new ({
-        name: name,
         transform: geoMarkerTransform,
         /*
         state: function (standardUniforms) {
@@ -410,7 +411,7 @@ let addGeoMarker = function (node, name, radius, latitude, longitude) {
         shape: "ball-small",
         */
         children: false
-    });
+    }, name);
     node.addChild (geoMarkerNode);
 };
 
@@ -497,6 +498,7 @@ let buildScene = function () {
         state: function (standardUniforms) {
             Program.get ("basic-texture").use ();
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
+            //standardUniforms.TEXTURE_SAMPLER = "tissot";
             standardUniforms.TEXTURE_SAMPLER = "moon";
             standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
             standardUniforms.AMBIENT_CONTRIBUTION = 0.1;
@@ -517,7 +519,8 @@ let buildScene = function () {
         // set the moon position and orientation in transform
         node.transform = Float4x4.chain (
             Float4x4.scale (moonScale),
-            Float4x4.rotateXAxisTo (solarSystem.moonDirection),
+            Float4x4.rotateY (solarSystem.moonTheta),
+            //Float4x4.rotateXAxisTo (solarSystem.moonDirection),
             Float4x4.translate (Float3.scale (solarSystem.moonDirection, (closeMoonCheckbox.checked ? 0.25 : 1) * solarSystem.moonR))
         );
     }}, "moon");
@@ -766,12 +769,11 @@ let onBodyLoad = function () {
                         .addItems (["starfield", "constellations"])
                         .go (null, OnReady.new (null, function (x) {
                             LoaderPath.new ({ type: Texture, path: "textures-test/@.png" })
-                                .addItems ("earth-plate-carree")
+                                .addItems (["earth-plate-carree", "tissot"])
                                 .go (null, OnReady.new (null, function (x) {
                                     buildScene ();
                                 }));
                         }));
-
                 }));
         }));
 };
