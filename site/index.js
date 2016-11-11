@@ -39,21 +39,6 @@ let getNodeBound = function (nodeName) {
     return Float3.norm (deltaVector);
 };
 
-let Doc = function () {
-    let _ = Object.create (ClassBase);
-    _.construct = function (parameters) {};
-    _.element = function (id) {
-        this[id] = document.getElementById(id);
-        return this;
-    };
-    _.elements = function (...ids) {
-        for (let id of ids) {
-            this.element (id);
-        }
-        return this;
-    };
-    return _;
-} ();
 let doc;
 
 let refreshTimeoutId = 0;
@@ -707,7 +692,7 @@ let onBodyLoad = function () {
     standardUniforms.AMBIENT_LIGHT_COLOR = [1.0, 1.0, 1.0];
     standardUniforms.LIGHT_COLOR = [1.0, 1.0, 1.0];
 
-    doc = Doc.new ().elements ("timeTypeSelect", "showStarsCheckbox", "showConstellationsCheckbox",
+    doc = DocumentHelper.new ().elements ("timeTypeSelect", "showStarsCheckbox", "showConstellationsCheckbox",
         "showCloudsCheckbox", "showAtmosphereCheckbox", "closeMoonCheckbox", "zoomRange", "fovRange",
         "cameraTypeSelect", "timeDisplay", "timeRange", "dayRange");
 
