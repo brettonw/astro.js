@@ -31,7 +31,6 @@ float hermite (const float x) {
 }
 
 float mystep (const float edge0, const float edge1, const float x) {
-    //return smoothstep (edge0, edge1, x);
     float y = linearStep (edge0, edge1, x);
     return (y < INFLECTION_PT) ? (hermite (INFLECTION_PT) * y / INFLECTION_PT) : hermite(y);
 }

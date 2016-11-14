@@ -459,7 +459,9 @@ let buildScene = function () {
     let moonNode = Node.new ({
         transform: Float4x4.IDENTITY,
         state: function (standardUniforms) {
-            Program.get ("basic-texture").use ();
+            Program.get ("moon").use ()
+                .setSunPosition (solarSystem.sunPosition)
+            ;
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
             //standardUniforms.TEXTURE_SAMPLER = "tissot";
             standardUniforms.TEXTURE_SAMPLER = "moon";
@@ -720,11 +722,12 @@ let onBodyLoad = function () {
 
             // load the astro specific shaders, and build the programs
             LoaderShader.new ("shaders/@.glsl")
-                .addFragmentShaders (["earth", "clouds", "atmosphere", "hardlight"])
+                .addFragmentShaders (["earth", "clouds", "atmosphere", "moon", "hardlight"])
                 .go (null, OnReady.new (null, function (x) {
                     Program.new ({ vertexShader: "basic" }, "earth");
                     Program.new ({ vertexShader: "basic" }, "clouds");
                     Program.new ({ vertexShader: "basic" }, "atmosphere");
+                    Program.new ({ vertexShader: "basic" }, "moon");
                     Program.new ({ vertexShader: "basic" }, "hardlight");
 
                     // load the textures

@@ -33,7 +33,6 @@ float hermite (const float x) {
 }
 
 float mystep (const float edge0, const float edge1, const float x) {
-    //return smoothstep (edge0, edge1, x);
     float y = linearStep (edge0, edge1, x);
     return (y < INFLECTION_PT) ? (hermite (INFLECTION_PT) * y / INFLECTION_PT) : hermite(y);
 }
@@ -61,12 +60,9 @@ float sunVisible (const in vec4 moonPosition, const in vec4 sunPosition) {
     float aArea = rA * rA * PI;
     float bArea = rB * rB * PI;
 
-    // compute my interpolated shortcut approximation
+    // compute my approximation to the intersection of two circles
     float baseline = max (0.0, (bArea - aArea) / bArea);
-    float edge0 = abs (rA - rB);
-    float edge1 = rA + rB;
-    float visibility = baseline + (mystep(edge0, edge1, d) * (1.0 - baseline));
-    return visibility;
+    return baseline + (mystep(abs (rA - rB), rA + rB, d) * (1.0 - baseline));
 }
 
 vec3 multiplyColors (const in vec3 left, const in vec3 right) {
