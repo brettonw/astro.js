@@ -577,7 +577,10 @@ let buildScene = function () {
     cloudsNode = Node.new ({
         transform: Float4x4.scale (cloudHeight),
         state: function (standardUniforms) {
-            Program.get ("clouds").use ();
+            Program.get ("clouds").use ()
+                .setSunPosition (solarSystem.sunPosition)
+                .setMoonPosition (solarSystem.moonPosition)
+            ;
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 0.90;
             standardUniforms.TEXTURE_SAMPLER = "clouds";
         },
@@ -592,7 +595,10 @@ let buildScene = function () {
         transform: Float4x4.scale (atmosphereDepth),
         state: function (standardUniforms) {
             Program.get ("atmosphere").use ()
-                .setAtmosphereDepth (atmosphereDepth - 1.0);
+                .setAtmosphereDepth (atmosphereDepth - 1.0)
+                .setSunPosition (solarSystem.sunPosition)
+                .setMoonPosition (solarSystem.moonPosition)
+            ;
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 0.5;
         },
         shape: "ball",

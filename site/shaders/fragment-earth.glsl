@@ -17,12 +17,12 @@ varying vec3 model;
 varying vec3 normal;
 varying vec2 texture;
 
+#define PI 3.14159265358979323846
+#define INFLECTION_PT 0.7886751345948128
+
 vec3 v3 (const in vec4 v4) {
     return vec3 (v4.x, v4.y, v4.z);
 }
-
-#define PI 3.14159265358979323846
-#define INFLECTION_PT 0.7886751345948128
 
 float linearStep (const float edge0, const float edge1, const float x) {
     return clamp ((x - edge0) / (edge1 - edge0), 0.0, 1.0);
@@ -67,42 +67,6 @@ float sunVisible (const in vec4 moonPosition, const in vec4 sunPosition) {
     float edge1 = rA + rB;
     float visibility = baseline + (mystep(edge0, edge1, d) * (1.0 - baseline));
     return visibility;
-
-/*
-    // if the circles are disjoint, the source is completely visible, this is probably most of the
-    // time, so we want to early out as much as possible
-    if (d >= rA + rB) {
-        return 1.0;
-    }
-
-    // if one of the circles is completely contained, there is no intersection point
-    float rDelta = rA - rB;//
-    if ((rDelta < 0.0) && (d < -rDelta)) {
-        // the blocker is smaller than the source and is contained
-        return (bArea - aArea) / bArea;
-    } else if (d <= rDelta) {
-        // the blocker is larger than the source, or exactly the same size
-        return 0.0;
-    }
-
-    // compute the lens intersection point, and the height of the chord
-    float a = ((rA * rA) - (rB * rB) + (d * d)) / (2.0 * d);
-    float b = d - a;
-    float c = sqrt ((rA * rA) - (a * a));
-
-    // compute the angle of the wedge on A, and the area of the subtended wedge as a fraction of the circle
-    float thetaA = atan(c, a);
-    float wedgeAreaA = aArea * (thetaA / PI);
-    float lensAreaA = wedgeAreaA - (a * c);
-
-    // compute the angle of the wedge on B, and the area of the subtended wedge as a fraction of the circle
-    float thetaB = atan (c, b);
-    float wedgeAreaB = bArea * (thetaB / PI);
-    float lensAreaB = wedgeAreaB - (b * c);
-
-    // return the area of the source minus the area of the intersection
-    return (bArea - (lensAreaA + lensAreaB)) / bArea;
-*/
 }
 
 vec3 multiplyColors (const in vec3 left, const in vec3 right) {
@@ -130,7 +94,8 @@ void main(void) {
 	float cosViewNormalAngle = dot(normalVector, viewVector);
 
     // the mapping from day to night
-    float daytimeScale = clamp((cosLightNormalAngle + 0.2) * 2.5, 0.0, 1.0) * sunVisible (moonPosition, sunPosition);
+    float sunVisibility = sunVisible (moonPosition, sunPosition);
+    float daytimeScale = clamp((cosLightNormalAngle + 0.2) * 2.5, 0.0, 1.0) * sunVisibility;
     daytimeScale *= daytimeScale;
 
     // get the texture map day color. The maps we are using (from Blue Marble at
@@ -152,7 +117,7 @@ void main(void) {
     vec3 reflection = reflect(-lightDirection, normalVector);
     float specularMultiplier = clamp(dot(reflection, viewVector), 0.0, 1.0);
     float specularMapTxValue = texture2D(specularMapTxSampler, texture).r;
-    vec3 specularColor = vec3(1.0, 0.9, 0.8) * (pow(specularMultiplier, specularExp) * 0.3 * specularMapTxValue);
+    vec3 specularColor = vec3(1.0, 0.9, 0.8) * (pow(specularMultiplier, specularExp) * 0.3 * specularMapTxValue * sunVisibility);
 
     vec3 finalColor = clamp (groundColor + specularColor, 0.0, 1.0);
 
