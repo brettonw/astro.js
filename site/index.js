@@ -525,7 +525,10 @@ let buildScene = function () {
             Program.get ("earth").use ()
                 .setDayTxSampler ("earth-day")
                 .setNightTxSampler ("earth-night")
-                .setSpecularMapTxSampler ("earth-specular-map");
+                .setSpecularMapTxSampler ("earth-specular-map")
+                .setSunPosition (solarSystem.sunPosition)
+                .setMoonPosition (solarSystem.moonPosition)
+            ;
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
         },
         shape: "ball"

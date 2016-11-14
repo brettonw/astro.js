@@ -115,7 +115,7 @@ let updateSolarSystem = function (time) {
         // XXX any reference values I can find.
 
         // XXX I *think* I am only missing the moon's axial tilt... it's only about 1.5 degrees
-        // XXX OR... the angle is bigger, because the moon is rotated about 1.5 degrees of the
+        // XXX OR... the angle is bigger, because the moon is rotated about 1.5 degrees off the
         // XXX ecliptic. If the angle is greater, it's probably effectively a rotation around the
         // XXX X-axis, giving a small apparent error, because my result right now matches several
         // XXX reference sources pretty closely (just not perfectly)
@@ -140,6 +140,20 @@ let updateSolarSystem = function (time) {
         // from a Java App at http://jgiesen.de/moonlibration/index.htm
         solarSystem.moonTheta = Utility.degreesToRadians (42.427549902001715 + -6.77 + (360.0 * moonSiderealMonth * jc));
 
+    }
+
+    // positions for rendering eclipse
+    {
+        // figure a coordinate system for the sun
+        let zAxis = solarSystem.sunDirection;
+        let xAxis = Float3.normalize (Float3.cross ([0, 1, 0], zAxis));
+        let yAxis = Float3.normalize (Float3.cross (zAxis, xAxis));
+
+        // project the moon into the solar coordinate system, both in earth radii
+        let sp = Float3.scale (solarSystem.sunDirection, (solarSystem.sunR * sunDistance));
+        solarSystem.sunPosition = [sp[0], sp[1], sp[2], sunRadius / earthRadius];
+        let mp = Float3.scale (solarSystem.moonDirection, solarSystem.moonR);
+        solarSystem.moonPosition = [mp[0], mp[1], mp[2], moonRadius / earthRadius];
     }
 
     // L1
