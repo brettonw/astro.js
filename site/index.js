@@ -1,5 +1,7 @@
 "use strict;"
 
+let render;
+
 let starsScene;
 let solarSystemScene;
 
@@ -684,13 +686,17 @@ let mouseWheel = function (event) {
     return (event.returnValue = false);
 };
 
+let onClickSave = function () {
+    render.save ("astro");
+};
+
 let onBodyLoad = function () {
     MouseTracker.new ("render-canvas", OnReady.new (null, function (deltaPosition) {
         draw (deltaPosition);
     }), 0.01);
     document.addEventListener ("mousewheel", mouseWheel, false);
 
-    Render.new ("render-canvas");
+    render = Render.new ({ canvasId:"render-canvas" });
 
     // a few common context details, clear color, backface culling, and blend modes
     context.clearColor (0.0, 0.0, 0.0, 1.0);
@@ -709,38 +715,36 @@ let onBodyLoad = function () {
 
     extractCamera ();
 
-    // load the basic shaders from the original soure
-    LoaderShader.new ("http://webgl-js.azurewebsites.net/site/shaders/@.glsl")
-        .addVertexShaders ("basic")
-        .addFragmentShaders (["basic", "basic-texture", "color", "overlay", "texture"])
-        .go (null, OnReady.new (null, function (x) {
+    // loader list
+    LoaderList
+        .new ()
+        .addLoaders (
+            LoaderShader
+                .new ("http://webgl-js.azurewebsites.net/site/shaders/@.glsl")
+                .addVertexShaders ("basic")
+                .addFragmentShaders (["basic", "basic-texture", "color", "overlay", "texture"]),
+            LoaderShader
+                .new ("shaders/@.glsl")
+                .addFragmentShaders (["earth", "clouds", "atmosphere", "moon", "hardlight"]),
+            LoaderPath
+                .new ({ type: Texture, path: "textures/@.png" })
+                .addItems (["clouds", "earth-day", "earth-night", "earth-specular-map", "moon"], { generateMipMap: true })
+                .addItems (["starfield", "constellations"]),
+            LoaderPath
+                .new ({ type: Texture, path: "textures-test/@.png" })
+                .addItems (["earth-plate-carree", "tissot"])
+        )
+        .go (OnReady.new (null, function (x) {
             Program.new ({}, "basic");
             Program.new ({ vertexShader: "basic" }, "basic-texture");
             Program.new ({ vertexShader: "basic" }, "color");
             Program.new ({ vertexShader: "basic" }, "overlay");
             Program.new ({ vertexShader: "basic" }, "texture");
-
-            // load the astro specific shaders, and build the programs
-            LoaderShader.new ("shaders/@.glsl")
-                .addFragmentShaders (["earth", "clouds", "atmosphere", "moon", "hardlight"])
-                .go (null, OnReady.new (null, function (x) {
-                    Program.new ({ vertexShader: "basic" }, "earth");
-                    Program.new ({ vertexShader: "basic" }, "clouds");
-                    Program.new ({ vertexShader: "basic" }, "atmosphere");
-                    Program.new ({ vertexShader: "basic" }, "moon");
-                    Program.new ({ vertexShader: "basic" }, "hardlight");
-
-                    // load the textures
-                    LoaderPath.new ({ type: Texture, path: "textures/@.png" })
-                        .addItems (["clouds", "earth-day", "earth-night", "earth-specular-map", "moon"], { generateMipMap: true })
-                        .addItems (["starfield", "constellations"])
-                        .go (null, OnReady.new (null, function (x) {
-                            LoaderPath.new ({ type: Texture, path: "textures-test/@.png" })
-                                .addItems (["earth-plate-carree", "tissot"])
-                                .go (null, OnReady.new (null, function (x) {
-                                    buildScene ();
-                                }));
-                        }));
-                }));
+            Program.new ({ vertexShader: "basic" }, "earth");
+            Program.new ({ vertexShader: "basic" }, "clouds");
+            Program.new ({ vertexShader: "basic" }, "atmosphere");
+            Program.new ({ vertexShader: "basic" }, "moon");
+            Program.new ({ vertexShader: "basic" }, "hardlight");
+            buildScene ();
         }));
 };
