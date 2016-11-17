@@ -1,3 +1,9 @@
+/*
+I am using a geocentric/celestial J2000 coordinate frame with the Earth at the origin.
+Stars and other elements referring to celestial J2000 RA/Dec ar to be plotted directly on the sky
+sphere at the coordinates given
+ */
+
 const daysPerJulianCentury = 36525.0;
 
 // radii in km so I can do some reasoning about scales...
