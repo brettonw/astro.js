@@ -715,6 +715,8 @@ let onBodyLoad = function () {
 
     extractCamera ();
 
+    // stars: https://brettonw.github.io/YaleBrightStarCatalog/bsc5.json
+
     // loader list
     LoaderList
         .new ()
