@@ -734,7 +734,10 @@ let onBodyLoad = function () {
                 .addItems (["starfield", "constellations"]),
             LoaderPath
                 .new ({ type: Texture, path: "textures-test/@.png" })
-                .addItems (["earth-plate-carree", "tissot"])
+                .addItems (["earth-plate-carree", "tissot"]),
+            Loader
+                .new ()
+                .addItem (TextFile, "Stars", { url: "https://brettonw.github.io/YaleBrightStarCatalog/bsc5-short.json"})
         )
         .go (OnReady.new (null, function (x) {
             Program.new ({}, "basic");
@@ -747,6 +750,10 @@ let onBodyLoad = function () {
             Program.new ({ vertexShader: "basic" }, "atmosphere");
             Program.new ({ vertexShader: "basic" }, "moon");
             Program.new ({ vertexShader: "basic" }, "hardlight");
+
+            // create the stars database
+            let starsDb = JSON.parse (TextFile.get ("Stars").text);
+
             buildScene ();
         }));
 
