@@ -56,8 +56,8 @@ let Blackbody = function () {
         }
     };
 
-    // compute the XYZ color by convolving the sensor curves with the (normalized) blackbody curve
-    // and then convert that to an RGB color
+    // compute the XYZ color by convolving the sensor response curves with the
+    // (normalized) blackbody curve and then convert that to an RGB color
     let getColorOfCurve = function (curve) {
         let X = 0.0, Y = 0.0, Z = 0.0;
         for(let i = 0; i < TEN_NM_STEPS; ++i) {
@@ -95,12 +95,14 @@ let Blackbody = function () {
 
     _.makeBand = function (elementId, steps) {
         let innerHTML = '<div style="width:100%;height:100%;">';
-        let min = 2000, max = 60000, delta = max - min, step = delta / steps;
-        let width = 100 / steps;
+        let min = 2000, max = 20000, delta = max - min, step = delta / steps;
+        let width = (99 / steps);
         for (let i = 0; i < steps; ++i) {
             let temperature = min + (i * step);
             let c = _.colorAtTemperature(temperature);
-            innerHTML += '<div style="display:inline-block;width:' + width + '%;height:100%;background-color:rgb(' + (c[0] * 255) + ',' + (c[1] * 255) + ',' + (c[2] * 255) + ');">' + i + '</div>';
+            innerHTML += '<div style="display:inline-block;width:' + width + '%;height:100%;background-color:rgb(' + Math.floor (c[0] * 255) + ',' + Math.floor (c[1] * 255) + ',' + Math.floor (c[2] * 255) + ');">';
+            innerHTML += '<span style="display:inline-block;transform:rotate(270deg);color:black;font-size:7px;margin-top:15px;margin-left:auto;margin-right:auto;"><span>' + Math.floor (temperature) + '°K</span></span>';
+            innerHTML += '</div>';
         }
         document.getElementById(elementId).innerHTML = innerHTML + "</div>";
     };

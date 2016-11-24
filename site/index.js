@@ -750,5 +750,5 @@ let onBodyLoad = function () {
             buildScene ();
         }));
 
-    Blackbody.makeBand("blackbodyDiv", 10);
+    Blackbody.makeBand("blackbodyDiv", 40);
 };
