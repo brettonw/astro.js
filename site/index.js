@@ -749,4 +749,6 @@ let onBodyLoad = function () {
             Program.new ({ vertexShader: "basic" }, "hardlight");
             buildScene ();
         }));
+
+    Blackbody.makeBand("blackbodyDiv", 10);
 };
