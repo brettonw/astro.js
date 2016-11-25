@@ -383,6 +383,7 @@ let addGeoMarker = function (node, name, radius, latitude, longitude) {
 let buildScene = function () {
     makeBall ("ball", 72);
     makeBall ("ball-small", 36);
+    Stars.make();
 
     starsScene = Node.new ({
         state: function (standardUniforms) {
@@ -394,12 +395,12 @@ let buildScene = function () {
     // stars are in their own scene so they can be drawn to track the camera
     // rotate by 180 degrees on the x axis to account for our coordinate system, then Y by 180
     // degrees to orient correctly. then flip it inside out and scale it up
-    let starsTransform = Float4x4.chain (
-        Float4x4.rotateX (Math.PI),
-        Float4x4.rotateY (Math.PI),
-        Float4x4.scale (-starSphereRadius)
-    );
-    starsNode = Node.new ({
+     let starsTransform = Float4x4.chain (
+     Float4x4.rotateX (Math.PI),
+     Float4x4.rotateY (Math.PI),
+     Float4x4.scale (-starSphereRadius)
+     );
+     starsNode = Node.new ({
         transform: starsTransform,
         state: function (standardUniforms) {
             Program.get ("texture").use ();
@@ -409,6 +410,22 @@ let buildScene = function () {
         shape: "ball"
     }, "stars");
     starsScene.addChild (starsNode);
+
+    starsTransform = Float4x4.chain (
+        Float4x4.rotateX (Math.PI),
+        Float4x4.rotateY (Math.PI),
+        Float4x4.scale (2.0)
+    );
+
+    starsScene.addChild (Node.new ({
+        transform: starsTransform,
+        state: function (standardUniforms) {
+            Program.get ("color").use ();
+            standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
+            standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
+        },
+        shape: "stars"
+    }, "starsx"));
 
     constellationsNode = Node.new ({
         state: function (standardUniforms) {
@@ -750,9 +767,6 @@ let onBodyLoad = function () {
             Program.new ({ vertexShader: "basic" }, "atmosphere");
             Program.new ({ vertexShader: "basic" }, "moon");
             Program.new ({ vertexShader: "basic" }, "hardlight");
-
-            // create the stars database
-            let starsDb = JSON.parse (TextFile.get ("Stars").text);
 
             buildScene ();
         }));
