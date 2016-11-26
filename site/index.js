@@ -389,7 +389,7 @@ let buildScene = function () {
         state: function (standardUniforms) {
             context.disable (context.DEPTH_TEST);
             context.depthMask (false);
-        },
+        }
     });
 
     // stars are in their own scene so they can be drawn to track the camera
@@ -414,17 +414,17 @@ let buildScene = function () {
     starsTransform = Float4x4.chain (
         Float4x4.rotateX (Math.PI),
         Float4x4.rotateY (Math.PI),
-        Float4x4.scale (2.0)
+        Float4x4.scale (1.0)
     );
 
-    starsScene.addChild (Node.new ({
-        transform: starsTransform,
+    starsNode.addChild (Node.new ({
+        transform: Float4x4.IDENTITY,
         state: function (standardUniforms) {
             Program.get ("color").use ();
             standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
         },
-        shape: "stars"
+        shape: "ball"
     }, "starsx"));
 
     constellationsNode = Node.new ({
@@ -542,6 +542,7 @@ let buildScene = function () {
     worldNode.addChild (earthRenderNode);
 
     let earthNode = Node.new ({
+        enabled:false,
         state: function (standardUniforms) {
             Program.get ("earth").use ()
                 .setDayTxSampler ("earth-day")
