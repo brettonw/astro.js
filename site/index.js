@@ -412,8 +412,8 @@ let buildScene = function () {
     starsScene.addChild (starsNode);
 
     starsTransform = Float4x4.chain (
-        Float4x4.rotateX (Math.PI),
-        Float4x4.rotateY (Math.PI),
+        //Float4x4.rotateX (Math.PI),
+        //Float4x4.rotateY (Math.PI),
         Float4x4.scale (starSphereRadius)
     );
 

@@ -20,12 +20,10 @@ let Stars = function () {
                     [ cTh, -sTh, 0.0, 1.0]
                 ];
                 let starFaceIndices = [
-                    0, 1, 2,
                     0, 2, 1,
-
-                    0, 2, 3,
-                    0, 3, 4,
-                    0, 4, 5
+                    0, 3, 2,
+                    0, 4, 3,
+                    0, 5, 4
                 ];
 
                 // the full point buffer
