@@ -37,10 +37,11 @@ let Stars = function () {
                     let ra = angleToRadians (angleFromString (star.RA));
                     let dec = angleToRadians (angleFromString (star.Dec));
 
-                    ra = 0; dec = 0;
+                    //ra = 0; dec = 0;
 
                     // build a transformation for the star points
                     let transform = Float4x4.chain (
+                        Float4x4.scale (0.001),
                         Float4x4.translate ([0.0, 0.0, 1.0]),
                         Float4x4.rotateX (dec),
                         Float4x4.rotateY (ra)

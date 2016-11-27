@@ -414,17 +414,17 @@ let buildScene = function () {
     starsTransform = Float4x4.chain (
         Float4x4.rotateX (Math.PI),
         Float4x4.rotateY (Math.PI),
-        Float4x4.scale (1.0)
+        Float4x4.scale (starSphereRadius)
     );
 
-    starsNode.addChild (Node.new ({
-        transform: Float4x4.IDENTITY,
+    starsScene.addChild (Node.new ({
+        transform: starsTransform,
         state: function (standardUniforms) {
             Program.get ("color").use ();
             standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
         },
-        shape: "ball"
+        shape: "stars"
     }, "starsx"));
 
     constellationsNode = Node.new ({
@@ -443,7 +443,7 @@ let buildScene = function () {
         state: function (standardUniforms) {
             Program.get ("color").use ();
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
-            standardUniforms.MODEL_COLOR = [255, 241, 234];
+            standardUniforms.MODEL_COLOR = [1.00, 0.98, 0.95];
         },
         shape: "ball",
         children: false
@@ -542,7 +542,6 @@ let buildScene = function () {
     worldNode.addChild (earthRenderNode);
 
     let earthNode = Node.new ({
-        enabled:false,
         state: function (standardUniforms) {
             Program.get ("earth").use ()
                 .setDayTxSampler ("earth-day")
