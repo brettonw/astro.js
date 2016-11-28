@@ -71,32 +71,23 @@
  * @param angle
  * @returns {number}
  */
-let angleToRadians = function (angle) {
+
+let circleFraction = function (angle) {
     let seconds = angle.seconds;
     let minutes = angle.minutes + (seconds / 60.0);
-    let circleFraction;
     if ("hours" in angle) {
-        let hours = angle.hours + (minutes / 60.0);
-        circleFraction = (hours / 24.0);
+        return angle.sign * ((angle.hours + (minutes / 60.0)) / 24.0);
     } else if ("degrees" in angle) {
-        let degrees = angle.degrees + (minutes / 60.0);
-        circleFraction = degrees / 360.0;
+        return angle.sign * (angle.degrees + (minutes / 60.0)) / 360.0;
     }
-    return angle.sign * circleFraction * 2.0 * Math.PI;
+};
+
+let angleToRadians = function (angle) {
+    return circleFraction (angle) * 2.0 * Math.PI;
 };
 
 let angleToDegrees = function (angle) {
-    let seconds = angle.seconds;
-    let minutes = angle.minutes + (seconds / 60);
-    let circleFraction;
-    if ("hours" in angle) {
-        let hours = angle.hours + (minutes / 60);
-        circleFraction = (hours / 24.0);
-    } else if ("degrees" in angle) {
-        let degrees = angle.degrees + (minutes / 60);
-        circleFraction = degrees / 360.0;
-    }
-    return angle.sign * circleFraction * 360.0;
+    return circleFraction (angle) * 360.0;
 };
 
 let testHourAngleToRadians = function () {
