@@ -7,6 +7,40 @@ let Stars = function () {
                 // create the stars database from the loaded file
                 let stars = JSON.parse (TextFile.get ("Stars").text);
 
+                /*
+                // sort the stars by brightness
+                stars.sort (function (left, right) {
+                    return left.V - right.V;
+                });
+
+                // choose only the brightest stars
+                let newStars = [];
+                for (let i = 0; i < 300; ++i) {
+                    newStars.push (stars[i]);
+                }
+                stars = newStars;
+                */
+
+                // build a hash of the stars by name
+                let starsHash = Object.create (null);
+                for (let star of stars) {
+                    if ("Bayer" in star) {
+                        starsHash[star.Bayer] = star;
+                    }
+                }
+
+                // only the Canis Minor stars
+                let newStars = [];
+                newStars.push (starsHash["α UMi"]);
+                newStars.push (starsHash["β UMi"]);
+                newStars.push (starsHash["γ UMi"]);
+                newStars.push (starsHash["δ UMi"]);
+                newStars.push (starsHash["ε UMi"]);
+                newStars.push (starsHash["η UMi"]);
+                newStars.push (starsHash["ζ UMi"]);
+                newStars.push (starsHash["θ UMi"]);
+                stars = newStars;
+
                 // a basic star triangle list
                 let theta = Math.PI / 3.0;
                 let cTh = Math.cos (theta);
