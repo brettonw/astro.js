@@ -33,17 +33,12 @@ let Stars = function () {
                     }
                     minV = Math.min (star.V, minV);
                     maxV = Math.max (star.V, maxV);
-                    /*
-                    else if ("F" in star) {
-                        starsHash[star.F + " " + star.C] = star;
-                        constellationStars.push (star);
-                    }
-                    */
                 }
                 let deltaV = maxV - minV;
 
                 // only the Ursa Minor stars
                 let newStars = [];
+                /*
                 newStars.push (starsHash["α UMi"]);
                 newStars.push (starsHash["β UMi"]);
                 newStars.push (starsHash["γ UMi"]);
@@ -52,7 +47,10 @@ let Stars = function () {
                 newStars.push (starsHash["η UMi"]);
                 newStars.push (starsHash["ζ UMi"]);
                 newStars.push (starsHash["θ UMi"]);
+                */
                 //stars = constellationStars;
+                newStars.push (starsHash["δ Ori"]);
+                //stars = newStars;
 
                 // a basic star triangle list
                 let theta = Math.PI / 3.0;

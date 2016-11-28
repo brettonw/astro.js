@@ -72,37 +72,31 @@
  * @returns {number}
  */
 let angleToRadians = function (angle) {
-    let sign = 1;
     let seconds = angle.seconds;
-    let minutes = angle.minutes + (seconds / 60);
+    let minutes = angle.minutes + (seconds / 60.0);
     let circleFraction;
     if ("hours" in angle) {
-        sign = Math.sign (angle.hours);
-        let hours = Math.abs (angle.hours) + (minutes / 60);
+        let hours = angle.hours + (minutes / 60.0);
         circleFraction = (hours / 24.0);
     } else if ("degrees" in angle) {
-        sign = Math.sign (angle.degrees);
-        let degrees = Math.abs (angle.degrees) + (minutes / 60);
+        let degrees = angle.degrees + (minutes / 60.0);
         circleFraction = degrees / 360.0;
     }
-    return sign * circleFraction * 2 * Math.PI;
+    return angle.sign * circleFraction * 2.0 * Math.PI;
 };
 
 let angleToDegrees = function (angle) {
-    let sign = 1;
     let seconds = angle.seconds;
     let minutes = angle.minutes + (seconds / 60);
     let circleFraction;
     if ("hours" in angle) {
-        sign = Math.sign (angle.hours);
-        let hours = Math.abs (angle.hours) + (minutes / 60);
+        let hours = angle.hours + (minutes / 60);
         circleFraction = (hours / 24.0);
     } else if ("degrees" in angle) {
-        sign = Math.sign (angle.degrees);
-        let degrees = Math.abs (angle.degrees) + (minutes / 60);
+        let degrees = angle.degrees + (minutes / 60);
         circleFraction = degrees / 360.0;
     }
-    return sign * circleFraction * 360.0;
+    return angle.sign * circleFraction * 360.0;
 };
 
 let testHourAngleToRadians = function () {
@@ -148,6 +142,13 @@ let angleFromString = function (string) {
     // ε = 23° 26′ 21.45″ − 46.815″ T − 0.0006″ T2 + 0.00181″ T3
     // "1h 30m 31s"
     let result = Object.create (null);
+    let signIndex = string.indexOf ("-");
+    if (signIndex >= 0) {
+        result.sign = -1.0;
+        string = string.substr (signIndex + 1);
+    } else {
+        result.sign = 1.0;
+    }
     let components = string.split (/[″"s]\s*/i);
     let fractional = parseFloat (((components.length > 1) && (components[1].length > 0)) ? components[1] : 0);
     components = components[0].split (/[′'m]\s*/i);
