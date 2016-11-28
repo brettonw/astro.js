@@ -404,7 +404,7 @@ let buildScene = function () {
         transform: starsTransform,
         state: function (standardUniforms) {
             Program.get ("texture").use ();
-            standardUniforms.TEXTURE_SAMPLER = "starfield-";
+            standardUniforms.TEXTURE_SAMPLER = "starfield";
             standardUniforms.OUTPUT_ALPHA_PARAMETER = starsNode.alpha;
         },
         shape: "ball"
