@@ -39,7 +39,7 @@ let Stars = function () {
                 newStars.push (starsHash["η UMi"]);
                 newStars.push (starsHash["ζ UMi"]);
                 newStars.push (starsHash["θ UMi"]);
-                stars = newStars;
+                //stars = newStars;
 
                 // a basic star triangle list
                 let theta = Math.PI / 3.0;
@@ -66,7 +66,7 @@ let Stars = function () {
                 // walk over the stars
                 for (let star of stars) {
                     // get the ra and declination of the star
-                    let ra = angleToRadians (angleFromString (star.RA));
+                    let ra = (Math.PI / -2.0) + (Math.PI - angleToRadians (angleFromString (star.RA)));
                     let dec = angleToRadians (angleFromString (star.Dec));
 
                     //ra = 0; dec = 0;
