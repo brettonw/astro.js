@@ -411,14 +411,8 @@ let buildScene = function () {
     }, "stars");
     starsScene.addChild (starsNode);
 
-    starsTransform = Float4x4.chain (
-        Float4x4.rotateX (Math.PI),
-        Float4x4.rotateY (Math.PI),
-        Float4x4.scale (starSphereRadius)
-    );
-
     starsScene.addChild (Node.new ({
-        transform: starsTransform,
+        transform: Float4x4.scale (starSphereRadius),
         state: function (standardUniforms) {
             Program.get ("color").use ();
             standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];

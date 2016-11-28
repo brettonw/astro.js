@@ -21,15 +21,28 @@ let Stars = function () {
                 stars = newStars;
                 */
 
-                // build a hash of the stars by name
+                // build a hash of the stars by name, find the min and max magnitude along
+                // the way
+                let minV = 100, maxV = -100;
                 let starsHash = Object.create (null);
+                let constellationStars = [];
                 for (let star of stars) {
-                    if ("Bayer" in star) {
-                        starsHash[star.Bayer] = star;
+                    if ("B" in star) {
+                        starsHash[star.B + " " + star.C] = star;
+                        constellationStars.push (star);
                     }
+                    minV = Math.min (star.V, minV);
+                    maxV = Math.max (star.V, maxV);
+                    /*
+                    else if ("F" in star) {
+                        starsHash[star.F + " " + star.C] = star;
+                        constellationStars.push (star);
+                    }
+                    */
                 }
+                let deltaV = maxV - minV;
 
-                // only the Canis Minor stars
+                // only the Ursa Minor stars
                 let newStars = [];
                 newStars.push (starsHash["α UMi"]);
                 newStars.push (starsHash["β UMi"]);
@@ -39,7 +52,7 @@ let Stars = function () {
                 newStars.push (starsHash["η UMi"]);
                 newStars.push (starsHash["ζ UMi"]);
                 newStars.push (starsHash["θ UMi"]);
-                stars = newStars;
+                //stars = constellationStars;
 
                 // a basic star triangle list
                 let theta = Math.PI / 3.0;
@@ -66,14 +79,16 @@ let Stars = function () {
                 // walk over the stars
                 for (let star of stars) {
                     // get the ra and declination of the star
-                    let ra = angleToRadians (angleFromString (star.RA));
-                    let dec = angleToRadians (angleFromString (star.Dec));
+                    let ra = (Math.PI / -2.0) + angleToRadians (angleFromString (star.RA));
+                    let dec = -angleToRadians (angleFromString (star.Dec));
 
-                    //ra = 0; dec = 0;
-
+                    // compute the size of this star, the dimmest will be 0.0005, the
+                    // brightest 0.001
+                    let interpolant = ((star.V - minV) / deltaV);
+                    let size = (0.002 * (1.0 - interpolant)) + (0.0001 * interpolant);
                     // build a transformation for the star points
                     let transform = Float4x4.chain (
-                        Float4x4.scale (0.001),
+                        Float4x4.scale (size),
                         Float4x4.translate ([0.0, 0.0, 1.0]),
                         Float4x4.rotateX (dec),
                         Float4x4.rotateY (ra)
