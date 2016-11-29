@@ -588,7 +588,10 @@ let buildScene = function () {
 
     // add some geo markers
     addGeoMarker (earthNode, "baltimore", 1.001, 39.2904, -76.6122);
-    addGeoMarker (earthNode, "b-z", 1.001, 39.2904, -76.0);
+    let theta = 0.6122;
+    let cosTheta = Utility.cos (theta);
+    let r = 1.0 / cosTheta;
+    addGeoMarker (earthNode, "b-z", (1.0 / cosTheta) + 0.0025, 39.2904, -76.6122 + theta);
     addGeoMarker (earthNode, "b-y", 1.1, 39.2904, -76.6122);
 
     // clouds at 40km is a bit on the high side..., but it shows well
