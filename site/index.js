@@ -268,8 +268,8 @@ let draw = function (deltaPosition) {
 
 
     // update the visibility layers
-    starsNode.enabled = doc.showStarsCheckbox.checked;
-    starsXNode.enabled = ! doc.showStarsCheckbox.checked;
+    starsNode.enabled = ! doc.showStarsCheckbox.checked;
+    starsXNode.enabled = doc.showStarsCheckbox.checked;
     constellationsNode.enabled = doc.showConstellationsCheckbox.checked;
 
     // ordinarily, webGl will automatically present and clear when we return control to the
@@ -416,7 +416,7 @@ let buildScene = function () {
     starsXNode = Node.new ({
         transform: Float4x4.scale (starSphereRadius),
         state: function (standardUniforms) {
-            Program.get ("color").use ();
+            Program.get ("vertex-color").use ();
             standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
         },
@@ -425,6 +425,7 @@ let buildScene = function () {
     starsScene.addChild (starsXNode);
 
     constellationsNode = Node.new ({
+        transform: starsTransform,
         state: function (standardUniforms) {
             Program.get ("overlay").use ();
             standardUniforms.OUTPUT_ALPHA_PARAMETER = starsNode.alpha * 0.25;
@@ -433,7 +434,7 @@ let buildScene = function () {
         shape: "ball",
         children: false
     }, "constellations");
-    starsNode.addChild (constellationsNode);
+    starsScene.addChild (constellationsNode);
 
     let sunNode = Node.new ({
         transform: Float4x4.IDENTITY,
@@ -736,17 +737,18 @@ let onBodyLoad = function () {
         .new ()
         .addLoaders (
             LoaderShader
-                .new ("http://webgl-js.azurewebsites.net/site/shaders/@.glsl")
+                .new ("https://brettonw.github.io/webgl.js/site/shaders/@.glsl")
                 .addVertexShaders ("basic")
-                .addFragmentShaders (["basic", "basic-texture", "color", "overlay", "texture"]),
+                .addFragmentShaders (["basic", "basic-texture", "color", "overlay", "texture", "vertex-color"]),
             LoaderShader
                 .new ("shaders/@.glsl")
                 .addFragmentShaders (["earth", "clouds", "atmosphere", "moon", "hardlight"]),
             LoaderPath
                 .new ({ type: Texture, path: "textures/@.png" })
                 .addItems (["clouds", "earth-day", "earth-night", "earth-specular-map", "moon"], { generateMipMap: true })
-                .addItems (["starfield", "constellations"]),
-            LoaderPath
+                .addItems (["constellations"]),
+                //.addItem (["constellations"]),
+        LoaderPath
                 .new ({ type: Texture, path: "textures-test/@.png" })
                 .addItems (["earth-plate-carree", "tissot"]),
             Loader
@@ -759,6 +761,7 @@ let onBodyLoad = function () {
             Program.new ({ vertexShader: "basic" }, "color");
             Program.new ({ vertexShader: "basic" }, "overlay");
             Program.new ({ vertexShader: "basic" }, "texture");
+            Program.new ({ vertexShader: "basic" }, "vertex-color");
             Program.new ({ vertexShader: "basic" }, "earth");
             Program.new ({ vertexShader: "basic" }, "clouds");
             Program.new ({ vertexShader: "basic" }, "atmosphere");
