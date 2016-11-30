@@ -436,12 +436,13 @@ let buildScene = function () {
     }, "constellations");
     starsScene.addChild (constellationsNode);
 
+    let sunColor = Blackbody.colorAtTemperature(5800);
     let sunNode = Node.new ({
         transform: Float4x4.IDENTITY,
         state: function (standardUniforms) {
             Program.get ("color").use ();
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
-            standardUniforms.MODEL_COLOR = [1.00, 0.98, 0.95];
+            standardUniforms.MODEL_COLOR = sunColor;
         },
         shape: "ball",
         children: false

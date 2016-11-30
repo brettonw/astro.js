@@ -69,10 +69,11 @@ let Stars = function () {
                     let alpha = 0.25 + (0.75 * (1.0 - interpolant));
                     let color = ("K" in star) ? Blackbody.colorAtTemperature(star.K) : [0.5, 0.5, 0.5];
                     for (let i = 1; i < starPoints.length; ++i) {
-                        colorBuffer.push ([color[0], color[1], color[2], 0.0]);
+                        colorBuffer.push ([color[0], color[1], color[2], 0.1]);
                     }
-                    //colorBuffer.push ([color[0], color[1], color[2], 0.75 + (0.25 * (1.0 - interpolant))]);
-                    colorBuffer.push ([1.0, 1.0, 1.0, alpha]);
+                    //colorBuffer.push ([1.0, 1.0, 1.0, alpha]);
+                    color = Float3.scale (Float3.add ([2.0, 2.0, 2.0], color), 0.3333);
+                    colorBuffer.push ([color[0], color[1], color[2], alpha]);
 
                     // push the indices into the final star points buffer
                     for (let index of starFaceIndices) {
