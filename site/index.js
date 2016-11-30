@@ -715,65 +715,47 @@ let onBodyLoad = function () {
     }), 0.01);
     document.addEventListener ("mousewheel", mouseWheel, false);
 
-    render = Render.new ({ canvasId:"render-canvas" });
-
-    // a few common context details, clear color, backface culling, and blend modes
-    context.clearColor (0.0, 0.0, 0.0, 1.0);
-    context.enable (context.CULL_FACE);
-    context.cullFace (context.BACK);
-    context.blendFunc (context.SRC_ALPHA, context.ONE_MINUS_SRC_ALPHA);
-    context.enable (context.BLEND);
-
-    // a little bit of setup for lighting
-    standardUniforms.AMBIENT_LIGHT_COLOR = [1.0, 1.0, 1.0];
-    standardUniforms.LIGHT_COLOR = [1.0, 1.0, 1.0];
-
     doc = DocumentHelper.new ().elements ("timeTypeSelect", "showStarsCheckbox", "showConstellationsCheckbox",
         "showCloudsCheckbox", "showAtmosphereCheckbox", "closeMoonCheckbox", "zoomRange", "fovRange",
         "cameraTypeSelect", "timeDisplay", "timeRange", "dayRange");
 
-    extractCamera ();
-
-    // stars: https://brettonw.github.io/YaleBrightStarCatalog/bsc5.json
-
-    // loader list
-    LoaderList
-        .new ()
-        .addLoaders (
-            LoaderShader
-                .new ("https://brettonw.github.io/webgl.js/site/shaders/@.glsl")
-                .addVertexShaders ("basic")
-                .addFragmentShaders (["basic", "basic-texture", "color", "overlay", "texture", "vertex-color"]),
-            LoaderShader
-                .new ("shaders/@.glsl")
+    render = Render.new ({
+        canvasId:"render-canvas",
+        aspectRatio: 16.0 / 9.0,
+        loaders:[
+            LoaderShader.new ("shaders/@.glsl")
                 .addFragmentShaders (["earth", "clouds", "atmosphere", "moon", "hardlight"]),
-            LoaderPath
-                .new ({ type: Texture, path: "textures/@.png" })
+            LoaderPath.new ({ type: Texture, path: "textures/@.png" })
                 .addItems (["clouds", "earth-day", "earth-night", "earth-specular-map", "moon"], { generateMipMap: true })
-                .addItems (["constellations"]),
-                //.addItem (["constellations"]),
-        LoaderPath
-                .new ({ type: Texture, path: "textures-test/@.png" })
+                .addItems ("constellations"),
+            LoaderPath.new ({ type: Texture, path: "textures-test/@.png" })
                 .addItems (["earth-plate-carree", "tissot"]),
-            Loader
-                .new ()
-                .addItem (TextFile, "Stars", { url: "https://brettonw.github.io/YaleBrightStarCatalog/bsc5-short.json"})
-        )
-        .go (OnReady.new (null, function (x) {
-            Program.new ({}, "basic");
-            Program.new ({ vertexShader: "basic" }, "basic-texture");
-            Program.new ({ vertexShader: "basic" }, "color");
-            Program.new ({ vertexShader: "basic" }, "overlay");
-            Program.new ({ vertexShader: "basic" }, "texture");
-            Program.new ({ vertexShader: "basic" }, "vertex-color");
+            Loader.new ()
+                .addItem (TextFile, "Stars", { url: "https://brettonw.github.io/YaleBrightStarCatalog/bsc5-short.json" })
+        ],
+        onReady: OnReady.new (null, function (x) {
             Program.new ({ vertexShader: "basic" }, "earth");
             Program.new ({ vertexShader: "basic" }, "clouds");
             Program.new ({ vertexShader: "basic" }, "atmosphere");
             Program.new ({ vertexShader: "basic" }, "moon");
             Program.new ({ vertexShader: "basic" }, "hardlight");
 
-            buildScene ();
-        }));
+            // a few common context details, clear color, backface culling, and blend modes
+            context.clearColor (0.0, 0.0, 0.0, 1.0);
+            context.enable (context.CULL_FACE);
+            context.cullFace (context.BACK);
+            context.blendFunc (context.SRC_ALPHA, context.ONE_MINUS_SRC_ALPHA);
+            context.enable (context.BLEND);
 
+            // a little bit of setup for lighting
+            standardUniforms.AMBIENT_LIGHT_COLOR = [1.0, 1.0, 1.0];
+            standardUniforms.LIGHT_COLOR = [1.0, 1.0, 1.0];
+
+            extractCamera ();
+            buildScene ();
+        })
+    });
+
+    // show color temperatures along the bottom of the page
     Blackbody.makeBand("blackbodyDiv", 40);
 };
