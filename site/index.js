@@ -11,7 +11,6 @@ let camera;
 let cameraSettings = Object.create (null);
 
 let starsNode;
-let starsXNode;
 let constellationsNode;
 let cloudsNode;
 let atmosphereNode;
@@ -268,8 +267,7 @@ let draw = function (deltaPosition) {
 
 
     // update the visibility layers
-    starsNode.enabled = ! doc.showStarsCheckbox.checked;
-    starsXNode.enabled = doc.showStarsCheckbox.checked;
+    starsNode.enabled = doc.showStarsCheckbox.checked;
     constellationsNode.enabled = doc.showConstellationsCheckbox.checked;
 
     // ordinarily, webGl will automatically present and clear when we return control to the
@@ -402,6 +400,7 @@ let buildScene = function () {
      Float4x4.rotateY (Math.PI),
      Float4x4.scale (-starSphereRadius)
      );
+    /*
      starsNode = Node.new ({
         transform: starsTransform,
         state: function (standardUniforms) {
@@ -412,8 +411,9 @@ let buildScene = function () {
         shape: "ball"
     }, "stars");
     starsScene.addChild (starsNode);
+    */
 
-    starsXNode = Node.new ({
+    starsNode = Node.new ({
         transform: Float4x4.scale (starSphereRadius),
         state: function (standardUniforms) {
             Program.get ("vertex-color").use ();
@@ -421,8 +421,8 @@ let buildScene = function () {
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
         },
         shape: "stars"
-    }, "starsx");
-    starsScene.addChild (starsXNode);
+    }, "stars");
+    starsScene.addChild (starsNode);
 
     constellationsNode = Node.new ({
         transform: starsTransform,

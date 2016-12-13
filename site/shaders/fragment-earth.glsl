@@ -91,15 +91,17 @@ void main(void) {
 
     // the mapping from day to night
     float sunVisibility = sunVisible (moonPosition, sunPosition);
-    float daytimeScale = clamp((cosLightNormalAngle + 0.2) * 2.5, 0.0, 1.0) * sunVisibility;
+    float daytimeScale = clamp((cosLightNormalAngle + 0.2) * 2.5, 0.0, 1.0);
     daytimeScale *= daytimeScale;
 
     // get the texture map day color. The maps we are using (from Blue Marble at
     // http://visibleearth.nasa.gov/view_cat.php?categoryID=1484&p=1) are very saturated, so we
     // screen in a bit of a hazy blue based on images from EPIC (http://epic.gsfc.nasa.gov/)
     vec3 dayTxColor = texture2D(dayTxSampler, texture).rgb;
-    vec3 hazyBlue = vec3(0.04, 0.07, 0.12);
-    dayTxColor = screenColor (dayTxColor, hazyBlue);
+    //vec3 hazyBlue = vec3(0.04, 0.07, 0.12);
+    //vec3 hazyBlue = vec3(0.07, 0.10, 0.25);
+    vec3 hazyBlue = vec3(0.06, 0.09, 0.18);
+    dayTxColor = screenColor (dayTxColor, hazyBlue) * sunVisibility;
 
     // get the texture map night color, scaled to black as the view angle fades away
     vec3 nightTxColor = texture2D(nightTxSampler, texture).rgb;
@@ -119,3 +121,7 @@ void main(void) {
 
     gl_FragColor = vec4 (finalColor, outputAlpha);
 }
+
+// blue marble image 43, 61, 71 (24, 34, 85)
+// mine (hb) 32, 52, 38
+// mine, uncorrected 22, 36, 8 (2, 5, 20)
