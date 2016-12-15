@@ -10,7 +10,8 @@ let standardUniforms = Object.create (null);
 let camera;
 let cameraSettings = Object.create (null);
 
-let starsNode;
+let brightStarsNode;
+let dimStarsNode;
 let constellationsNode;
 let cloudsNode;
 let atmosphereNode;
@@ -85,7 +86,7 @@ let draw = function (deltaPosition) {
     let fovRangeValue = doc.fovRange.value;
     fovRangeValue *= 0.01;
     let fovRangeValueInverse = 1.0 - fovRangeValue;
-    starsNode.alpha = Math.sqrt (fovRangeValueInverse);
+    brightStarsNode.alpha = dimStarsNode.alpha = Math.sqrt (fovRangeValueInverse);
     let fov = 1.0 + (59.0 * fovRangeValueInverse);
 
     // set up the view parameters
@@ -267,7 +268,8 @@ let draw = function (deltaPosition) {
 
 
     // update the visibility layers
-    starsNode.enabled = doc.showStarsCheckbox.checked;
+    brightStarsNode.enabled = doc.showBrightStarsCheckbox.checked;
+    dimStarsNode.enabled = doc.showDimStarsCheckbox.checked;
     constellationsNode.enabled = doc.showConstellationsCheckbox.checked;
 
     // ordinarily, webGl will automatically present and clear when we return control to the
@@ -383,7 +385,8 @@ let addGeoMarker = function (node, name, radius, latitude, longitude) {
 let buildScene = function () {
     makeBall ("ball", 72);
     makeBall ("ball-small", 36);
-    Stars.make();
+    Stars.make("Bright Stars", -2, 6);
+    Stars.make("Dim Stars", 6, 8);
 
     starsScene = Node.new ({
         state: function (standardUniforms) {
@@ -401,34 +404,43 @@ let buildScene = function () {
      Float4x4.scale (-starSphereRadius)
      );
     /*
-     starsNode = Node.new ({
+     brightStarsNode = Node.new ({
         transform: starsTransform,
         state: function (standardUniforms) {
             Program.get ("texture").use ();
             standardUniforms.TEXTURE_SAMPLER = "starfield";
-            standardUniforms.OUTPUT_ALPHA_PARAMETER = starsNode.alpha;
+            standardUniforms.OUTPUT_ALPHA_PARAMETER = brightStarsNode.alpha;
         },
         shape: "ball"
     }, "stars");
-    starsScene.addChild (starsNode);
+    starsScene.addChild (brightStarsNode);
     */
 
-    starsNode = Node.new ({
+    starsScene.addChild (dimStarsNode = Node.new ({
         transform: Float4x4.scale (starSphereRadius),
         state: function (standardUniforms) {
             Program.get ("vertex-color").use ();
             standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
             standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
         },
-        shape: "stars"
-    }, "stars");
-    starsScene.addChild (starsNode);
+        shape: "Dim Stars"
+    }, "Dim Stars"));
+
+    starsScene.addChild (brightStarsNode = Node.new ({
+        transform: Float4x4.scale (starSphereRadius),
+        state: function (standardUniforms) {
+            Program.get ("vertex-color").use ();
+            standardUniforms.MODEL_COLOR = [1.0, 1.0, 1.0];
+            standardUniforms.OUTPUT_ALPHA_PARAMETER = 1.0;
+        },
+        shape: "Bright Stars"
+    }, "Bright Stars"));
 
     constellationsNode = Node.new ({
         transform: starsTransform,
         state: function (standardUniforms) {
             Program.get ("overlay").use ();
-            standardUniforms.OUTPUT_ALPHA_PARAMETER = starsNode.alpha * 0.25;
+            standardUniforms.OUTPUT_ALPHA_PARAMETER = brightStarsNode.alpha * 0.25;
             standardUniforms.TEXTURE_SAMPLER = "constellations";
         },
         shape: "ball",
@@ -715,9 +727,9 @@ let onBodyLoad = function () {
     }), 0.01);
     document.addEventListener ("mousewheel", mouseWheel, false);
 
-    doc = DocumentHelper.new ().elements ("timeTypeSelect", "showStarsCheckbox", "showConstellationsCheckbox",
-        "showCloudsCheckbox", "showAtmosphereCheckbox", "closeMoonCheckbox", "zoomRange", "fovRange",
-        "cameraTypeSelect", "timeDisplay", "timeRange", "dayRange");
+    doc = DocumentHelper.new ().elements ("timeTypeSelect", "showBrightStarsCheckbox", "showDimStarsCheckbox",
+        "showConstellationsCheckbox", "showCloudsCheckbox", "showAtmosphereCheckbox", "closeMoonCheckbox",
+        "zoomRange", "fovRange", "cameraTypeSelect", "timeDisplay", "timeRange", "dayRange");
 
     render = Render.new ({
         canvasId:"render-canvas",

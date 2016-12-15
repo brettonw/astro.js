@@ -98,30 +98,14 @@ let testHourAngleToRadians = function () {
         }
     };
 
-    affirm ("1h", angleToRadians ({ hours: 1, minutes: 0, seconds: 0 }), (1 / 24) * (2 * Math.PI));
+    affirm ("1h", angleToRadians ({ sign:1, hours: 1, minutes: 0, seconds: 0 }), (1 / 24) * (2 * Math.PI));
     affirm ("2h", angleToRadians ({ hours: 2, minutes: 0, seconds: 0 }), (2 / 24) * (2 * Math.PI));
 
-    affirm ("1h 30m", angleToRadians ({
-        hours: 1,
-        minutes: 30,
-        seconds: 0
-    }), (1.5 / 24) * (2 * Math.PI));
-    affirm ("1h 31m", angleToRadians ({
-        hours: 1,
-        minutes: 31,
-        seconds: 0
-    }), ((1 + (31 / 60)) / 24) * (2 * Math.PI));
+    affirm ("1h 30m", angleToRadians ({ sign:1, hours: 1, minutes: 30, seconds: 0 }), (1.5 / 24) * (2 * Math.PI));
+    affirm ("1h 31m", angleToRadians ({ sign:1, hours: 1, minutes: 31, seconds: 0 }), ((1 + (31 / 60)) / 24) * (2 * Math.PI));
 
-    affirm ("1h 30m 30s", angleToRadians ({
-        hours: 1,
-        minutes: 30,
-        seconds: 30
-    }), ((1 + (30 / 60) + (30 / (60 * 60))) / 24) * (2 * Math.PI));
-    affirm ("1h 30m 31s", angleToRadians ({
-        hours: 1,
-        minutes: 30,
-        seconds: 31
-    }), ((1 + (30 / 60) + (31 / (60 * 60))) / 24) * (2 * Math.PI));
+    affirm ("1h 30m 30s", angleToRadians ({ sign:1, hours: 1, minutes: 30, seconds: 30 }), ((1 + (30 / 60) + (30 / (60 * 60))) / 24) * (2 * Math.PI));
+    affirm ("1h 30m 31s", angleToRadians ({ sign:1, hours: 1, minutes: 30, seconds: 31 }), ((1 + (30 / 60) + (31 / (60 * 60))) / 24) * (2 * Math.PI));
 } ();
 
 String.prototype.test = function (re) {
@@ -181,11 +165,11 @@ let testHourAngleFromString = function () {
             console.log (angleString + ", got (" + bareObjectToString (test) + "), expected (" + bareObjectToString (expect) + "): FAIL");
         }
     };
-    affirm ("23° 26′ 21″.406", { degrees: 23, minutes: 26, seconds: 21.406 });
-    affirm ("23° 26′ 21.45″", { degrees: 23, minutes: 26, seconds: 21.45 });
-    affirm ("1h 30m 31s", { hours: 1, minutes: 30, seconds: 31 });
-    affirm ("46.836769″", { hours: 0, minutes: 0, seconds: 46.836769 });
-    affirm ("46″.836769", { hours: 0, minutes: 0, seconds: 46.836769 });
+    affirm ("23° 26′ 21″.406", { sign:1, degrees: 23, minutes: 26, seconds: 21.406 });
+    affirm ("23° 26′ 21.45″", { sign:1, degrees: 23, minutes: 26, seconds: 21.45 });
+    affirm ("1h 30m 31s", { sign:1, hours: 1, minutes: 30, seconds: 31 });
+    affirm ("46.836769″", { sign:1, hours: 0, minutes: 0, seconds: 46.836769 });
+    affirm ("46″.836769", { sign:1, hours: 0, minutes: 0, seconds: 46.836769 });
 } ();
 
 let eclipticPlaneObliquity = function (t) {
