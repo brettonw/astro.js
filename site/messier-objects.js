@@ -1,4 +1,4 @@
-let Stars = function () {
+let MessierObjects = function () {
     let _ = Object.create (null);
 
     _.make = function (name, includeMinV, includeMaxV) {
