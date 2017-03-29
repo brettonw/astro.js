@@ -1,8 +1,7 @@
 # astro.js
  Earth-centric astronomy
 
-Deployed at: http://astro-js.brettonw.com/ (though the free Azure website connection is severely constrained 
-and may not serve up the high resolution textures correctly).
+Deployed at: http://astro-js.brettonw.com/.
 
 <center><img src="http://astro-js.brettonw.com/img/sample.png" alt="Drawing" style="width: 320px;"/></center>
 
