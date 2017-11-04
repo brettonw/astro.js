@@ -47,13 +47,13 @@ let doc;
 let refreshTimeoutId = 0;
 let currentTime;
 let draw = function (deltaPosition) {
-    // ensure the draw function is called about once per minute to keep the display refreshed
+    // ensure the draw function is called about once per second to keep the display refreshed
     if (refreshTimeoutId != 0) {
         clearTimeout (refreshTimeoutId);
     }
     refreshTimeoutId = setTimeout (function () {
         draw ([0, 0]);
-    }, 1000 * 60);
+    }, 1000);
 
     // determine how to set the clock
     switch (doc.timeTypeSelect.value) {
@@ -574,7 +574,7 @@ let buildScene = function () {
     // * GOES _GOES15_ "US GOES West" (135.0W) (infrared channel 2)
     // * MTSAT _MTSAT3_ "Himawari 8" (140.7E)
     let addGeoSatellite = function (name, longitude) {
-        let geoAltitude = 35780 / earthRadius;
+        let geoAltitude = 35780.0 / earthRadius;
         let geoTransform = Float4x4.chain (
             Float4x4.scale (0.01),
             Float4x4.translate ([geoAltitude, 0, 0]),
@@ -606,6 +606,9 @@ let buildScene = function () {
     let r = 1.0 / cosTheta;
     addGeoMarker (earthNode, "b-z", (1.0 / cosTheta) + 0.0025, 39.2904, -76.6122 + theta);
     addGeoMarker (earthNode, "b-y", 1.1, 39.2904, -76.6122);
+
+    addGeoMarker (earthNode, "santa monica", 1.001, 34.033033, -118.457722);
+    addGeoMarker (earthNode, "santa monica geo", 35780.0 / earthRadius, 34.033033, -118.457722);
 
     // clouds at 40km is a bit on the high side..., but it shows well
     let cloudHeight = (40 + earthRadius) / earthRadius;
