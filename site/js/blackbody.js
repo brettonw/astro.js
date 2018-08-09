@@ -109,3 +109,7 @@ let Blackbody = function () {
 
     return _;
 } ();
+
+// a bit of reference for future adaptations:
+// http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+// http://www.brucelindbloom.com/index.html?Eqn_ChromAdapt.html
