@@ -7,5 +7,9 @@
 echo "pushing to S3..."
 dotclean.js .
 pushd site
-aws s3 sync . s3://aws-website-astro-js-vl4ki --delete --exclude ".*"
+aws s3 sync --no-follow-symlinks --profile "bretton.wade@gmail.com" . s3://aws-website-astro-js-vl4ki --delete --exclude ".*"
+
+echo "invalidating distribution to force cache refresh...";
+aws cloudfront create-invalidation --profile "bretton.wade@gmail.com" --distribution-id E2J71IZDRZXM6B --paths "/*"
+
 popd
