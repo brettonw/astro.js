@@ -44,10 +44,15 @@
                         <option value="" disabled="disabled">—————————————</option>
                         <option value="2000.1.1.12">J2000 (0)</option>
                         <option value="" disabled="disabled">—————————————</option>
-                        <option value="2005.10.03.10.31">2005-10-03 Solar Eclipse</option>
-                        <option value="2016.3.9.1.57">2016-03-09 Solar Eclipse</option>
-                        <option value="2016.9.01.9.1">2016-09-01 Solar Eclipse</option>
-                        <option value="2017.8.21.18.26">2017-08-21 Solar Eclipse</option>
+                        <option value="2016.3.9.1.57">2016-03-09 Total Solar Eclipse</option>
+                        <option value="2017.8.21.18.26">2017-08-21 Total Solar Eclipse</option>
+                        <option value="2019.7.02.19.24">2019-07-02 Total Solar Eclipse</option>
+                        <option value="2020.12.14.16.14">2020-12-14 Total Solar Eclipse</option>
+                        <option value="2024.4.08.18.18">2024-04-08 Total Solar Eclipse</option>
+                        <option value="" disabled="disabled">—————————————</option>
+                        <option value="2005.10.03.10.31">2005-10-03 Annular Solar Eclipse</option>
+                        <option value="2016.9.01.9.1">2016-09-01 Annular Solar Eclipse</option>
+                        <option value="2021.6.10.4.12">2021-06-10 Annular Solar Eclipse</option>
                         <option value="" disabled="disabled">—————————————</option>
                         <option value="2011.12.10.14.31">2011-12-10 Total Lunar Eclipse</option>
                         <option value="2015.9.28.2.47">2015-09-28 Total Lunar Eclipse</option>
@@ -60,7 +65,11 @@
                         <option value="1969.7.24">1969-07-24 Apollo 11 Landing</option>
                         <option value="2015.7.16">DSCOVR Moon Transit 2015</option>
                         <option value="2016.11.1.12">2016111-1200</option>
+                        <option value="2020.10.02">DSCOVR Moon Occultation, Oct. 2020</option>
+                        <option value="2021.2.11">DSCOVR Moon Transit Feb. 2021</option>
                         <option value="2005.9.1">September 2005</option>
+                        <option value="" disabled="disabled">—————————————</option>
+                        <option value="custom">Custom</option>
                     </select>
                 </td>
             </tr>
@@ -163,6 +172,10 @@
             <tr>
                 <td>
                     <input type="button" value="Save Image" onclick="onClickSave ();">
+                    <input type="button" value="Save 10" onclick="onClickSaveMany (1, 10);">
+                    <input type="button" value="Save 20" onclick="onClickSaveMany (1, 20);">
+                    <input type="button" value="Save 30" onclick="onClickSaveMany (1, 30);">
+                    <input type="button" value="Save 40" onclick="onClickSaveMany (1, 40);">
                 </td>
             </tr>
         </table>

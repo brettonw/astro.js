@@ -724,6 +724,16 @@ let onClickSave = function () {
     render.save ("astro");
 };
 
+let onClickSaveMany = function (counter, stop) {
+    render.save ("astro-" + ("" + counter).padStart(3, "0"));
+    if (counter < stop) {
+        doc.timeRange.value++;
+        setTimeout (function () {
+            onClickSaveMany (counter + 1, stop);
+        }, 1100);
+    }
+};
+
 let onBodyLoad = function () {
     MouseTracker.new ("render-canvas", OnReady.new (null, function (deltaPosition) {
         draw (deltaPosition);
@@ -734,42 +744,52 @@ let onBodyLoad = function () {
         "showConstellationsCheckbox", "showCloudsCheckbox", "showAtmosphereCheckbox", "closeMoonCheckbox",
         "zoomRange", "fovRange", "cameraTypeSelect", "timeDisplay", "timeRange", "dayRange");
 
-    render = Render.new ({
-        canvasId:"render-canvas",
-        aspectRatio: 16.0 / 9.0,
-        loaders:[
-            LoaderShader.new ("shaders/@.glsl")
-                .addFragmentShaders (["earth", "clouds", "atmosphere", "moon", "hardlight"]),
-            LoaderPath.new ({ type: Texture, path: "textures/@.png" })
-                .addItems (["clouds", "earth-day", "earth-night", "earth-specular-map", "moon"], { generateMipMap: true })
-                .addItems ("constellations"),
-            LoaderPath.new ({ type: Texture, path: "textures-test/@.png" })
-                .addItems (["earth-plate-carree", "tissot"]),
-            Loader.new ()
-                .addItem (TextFile, "Stars", { url: "https://brettonw.github.io/YaleBrightStarCatalog/bsc5-short.json" })
-        ],
-        onReady: OnReady.new (null, function (x) {
-            Program.new ({ vertexShader: "basic" }, "earth");
-            Program.new ({ vertexShader: "basic" }, "clouds");
-            Program.new ({ vertexShader: "basic" }, "atmosphere");
-            Program.new ({ vertexShader: "basic" }, "moon");
-            Program.new ({ vertexShader: "basic" }, "hardlight");
+    Loader.new ()
+        .addItem (TextFile, "SolarEclipse", { url: "eclipse/solar.json" })
+        .addItem (TextFile, "LunarEclipse", { url: "eclipse/lunar.json" })
+        .go (OnReady.new (null, function (x) {
+            // add the eclipses
+            let solarEclipse = JSON.parse (TextFile.get ("SolarEclipse").text);
+            let lunarEclipse = JSON.parse (TextFile.get ("LunarEclipse").text);
 
-            // a few common context details, clear color, backface culling, and blend modes
-            context.clearColor (0.0, 0.0, 0.0, 1.0);
-            context.enable (context.CULL_FACE);
-            context.cullFace (context.BACK);
-            context.blendFunc (context.SRC_ALPHA, context.ONE_MINUS_SRC_ALPHA);
-            context.enable (context.BLEND);
+            render = Render.new ({
+                canvasId:"render-canvas",
+                aspectRatio: 16.0 / 9.0,
+                loaders:[
+                    LoaderShader.new ("shaders/@.glsl")
+                        .addFragmentShaders (["earth", "clouds", "atmosphere", "moon", "hardlight"]),
+                    LoaderPath.new ({ type: Texture, path: "textures/@.png" })
+                        .addItems (["clouds", "earth-day", "earth-night", "earth-specular-map", "moon"], { generateMipMap: true })
+                        .addItems ("constellations"),
+                    LoaderPath.new ({ type: Texture, path: "textures-test/@.png" })
+                        .addItems (["earth-plate-carree", "tissot"]),
+                    Loader.new ()
+                        .addItem (TextFile, "Stars", { url: "https://brettonw.github.io/YaleBrightStarCatalog/bsc5-short.json" })
+                ],
+                onReady: OnReady.new (null, function (x) {
+                    Program.new ({ vertexShader: "basic" }, "earth");
+                    Program.new ({ vertexShader: "basic" }, "clouds");
+                    Program.new ({ vertexShader: "basic" }, "atmosphere");
+                    Program.new ({ vertexShader: "basic" }, "moon");
+                    Program.new ({ vertexShader: "basic" }, "hardlight");
 
-            // a little bit of setup for lighting
-            standardUniforms.AMBIENT_LIGHT_COLOR = [1.0, 1.0, 1.0];
-            standardUniforms.LIGHT_COLOR = [1.0, 1.0, 1.0];
+                    // a few common context details, clear color, backface culling, and blend modes
+                    context.clearColor (0.0, 0.0, 0.0, 1.0);
+                    context.enable (context.CULL_FACE);
+                    context.cullFace (context.BACK);
+                    context.blendFunc (context.SRC_ALPHA, context.ONE_MINUS_SRC_ALPHA);
+                    context.enable (context.BLEND);
 
-            extractCamera ();
-            buildScene ();
-        })
-    });
+                    // a little bit of setup for lighting
+                    standardUniforms.AMBIENT_LIGHT_COLOR = [1.0, 1.0, 1.0];
+                    standardUniforms.LIGHT_COLOR = [1.0, 1.0, 1.0];
+
+                    extractCamera ();
+                    buildScene ();
+                })
+            });
+        }));
+
 
     // show color temperatures along the bottom of the page
     Blackbody.makeBand("blackbodyDiv", 40);
