@@ -734,6 +734,16 @@ let onClickSaveMany = function (counter, stop) {
     }
 };
 
+let downloadObjectAsJson = function (exportObj, exportName){
+    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+    var downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", exportName + ".json");
+    document.body.appendChild(downloadAnchorNode); // required for firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+}
+
 let onBodyLoad = function () {
     MouseTracker.new ("render-canvas", OnReady.new (null, function (deltaPosition) {
         draw (deltaPosition);
@@ -745,12 +755,10 @@ let onBodyLoad = function () {
         "zoomRange", "fovRange", "cameraTypeSelect", "timeDisplay", "timeRange", "dayRange");
 
     Loader.new ()
-        .addItem (TextFile, "SolarEclipse", { url: "eclipse/solar.json" })
-        .addItem (TextFile, "LunarEclipse", { url: "eclipse/lunar.json" })
+        .addItem (TextFile, "Eclipse", { url: "eclipse.json" })
         .go (OnReady.new (null, function (x) {
-            // add the eclipses
-            let solarEclipse = JSON.parse (TextFile.get ("SolarEclipse").text);
-            let lunarEclipse = JSON.parse (TextFile.get ("LunarEclipse").text);
+            // add the eclipse data
+            let eclipse = JSON.parse (TextFile.get ("Eclipse").text);
 
             render = Render.new ({
                 canvasId:"render-canvas",
