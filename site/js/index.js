@@ -772,7 +772,9 @@ let onBodyLoad = function () {
                     LoaderPath.new ({ type: Texture, path: "textures-test/@.png" })
                         .addItems (["earth-plate-carree", "tissot"]),
                     Loader.new ()
-                        .addItem (TextFile, "Stars", { url: "https://brettonw.github.io/YaleBrightStarCatalog/bsc5-short.json" })
+                        .addItem (TextFile, "Stars", { url: "https://brettonw.github.io/YaleBrightStarCatalog/bsc5-short.json" }),
+                    Loader.new ()
+                        .addItem (TextFile, "Messier", { url: "https://brettonw.github.io/YaleBrightStarCatalog/messier.json" })
                 ],
                 onReady: OnReady.new (null, function (x) {
                     Program.new ({ vertexShader: "basic" }, "earth");

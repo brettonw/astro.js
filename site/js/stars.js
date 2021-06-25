@@ -4,9 +4,6 @@ let Stars = function () {
     _.make = function (name, includeMinV, includeMaxV) {
         return Shape.new ({
             buffers: function () {
-                // create the stars database from the loaded file
-                let stars = JSON.parse (TextFile.get ("Stars").text);
-
                 // the min and max V values, so we can interpolate the sizes
                 let minV = -1.5, maxV = 8;
                 let deltaV = maxV - minV;
@@ -39,7 +36,7 @@ let Stars = function () {
 
                 // walk over the stars
                 let count = 0;
-                for (let star of stars) {
+                let addStar = function (star) {
                     if ((star.V >= includeMinV) && (star.V < includeMaxV)) {
                         count++;
                         // get the right ascension and declination of the star, accounting for
@@ -69,7 +66,7 @@ let Stars = function () {
                         // compute the color for the star, and push the colors into the final
                         // star color buffer
                         let alpha = 0.25 + (0.75 * (1.0 - interpolant));
-                        let color = ("K" in star) ? Blackbody.colorAtTemperature (star.K) : [0.5, 0.5, 0.5];
+                        let color = ("K" in star) ? Blackbody.colorAtTemperature (star.K) : [1.0, 0.5, 0.5];
                         for (let i = 1; i < starPoints.length; ++i) {
                             colorBuffer.push ([color[0], color[1], color[2], 0.1]);
                         }
@@ -83,6 +80,12 @@ let Stars = function () {
                         }
                     }
                 }
+
+                // create the stars database from the loaded files
+                let stars = JSON.parse (TextFile.get ("Stars").text);
+                for (let star of stars) addStar (star);
+                let messiers = JSON.parse (TextFile.get ("Messier").text);
+                for (let messier of messiers) addStar (messier);
                 LogLevel.info ("Star count (" + name + "): " + count);
 
                 // flatten the buffer as the return result
