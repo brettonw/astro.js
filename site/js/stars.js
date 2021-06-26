@@ -84,6 +84,8 @@ let Stars = function () {
                 // create the stars database from the loaded files
                 let stars = JSON.parse (TextFile.get ("Stars").text);
                 for (let star of stars) addStar (star);
+
+                // technically the M objects could be much larger, but for now we'll just treat them as stars
                 let messiers = JSON.parse (TextFile.get ("Messier").text);
                 for (let messier of messiers) addStar (messier);
                 LogLevel.info ("Star count (" + name + "): " + count);
