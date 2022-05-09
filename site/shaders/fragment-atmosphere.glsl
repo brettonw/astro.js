@@ -1,19 +1,20 @@
+#version 300 es
+
 precision highp float;
 
-uniform mat4 normalMatrix;
-uniform sampler2D textureSampler;
 uniform float outputAlpha;
 uniform vec3 lightDirection;
 uniform vec3 cameraPosition;
 uniform float atmosphereDepth;
 
-
 uniform vec4 sunPosition;
 uniform vec4 moonPosition;
 
-varying vec3 model;
-varying vec3 normal;
-varying vec2 texture;
+in vec3 model;
+in vec3 normal;
+in vec2 uv;
+
+out vec4 fragmentColor;
 
 #define PI 3.14159265358979323846
 #define INFLECTION_PT 0.7886751345948128
@@ -72,7 +73,7 @@ vec3 smoothmix (const in vec3 a, const in vec3 b, const in float t) {
 
 void main(void) {
 	vec3 v = normalize (cameraPosition - model);
-    vec3 n = normalize ((normalMatrix * vec4 (normal, 0)).xyz);
+    vec3 n = normalize (normal);
 
 	float cosLightNormalAngle = dot(n, lightDirection);
 	float cosViewNormalAngle = dot(n, v);
@@ -95,5 +96,5 @@ void main(void) {
 	// the sky color is faded out according to the proximity to the day/night boundary
 	vec3 daytimeLightColor = smoothmix (vec3 (1.0, 0.85, 0.7), vec3 (0.7, 0.85, 1.0), daytimeScale);
 	float atmosphere = atmosphereTravelDistance * atmosphereTravelDistance * outputAlpha * daytimeScale;
-	gl_FragColor = vec4 (daytimeLightColor, atmosphere);
+    fragmentColor = vec4 (daytimeLightColor, atmosphere);
 }
