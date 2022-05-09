@@ -323,12 +323,12 @@ let selectTime = function () {
             break;
         case "current":
             // if we come here from anything but paused, we want to reset the time sliders
-            reset = (lastTimeType != "current");
+            reset = (lastTimeType !== "current");
             lastTimeType = newTimeType;
             break;
         case "paused":
             // if it wasn't current, bounce back to whatever the setting was
-            if (lastTimeType != "current") {
+            if (lastTimeType !== "current") {
                 doc.timeTypeSelect.value = lastTimeType;
             }
             break;
@@ -671,6 +671,7 @@ let buildScene = function () {
         update:function (time) {
         // get the node, and set the L1 transform - because our system is scaled around the
         // earth/moon region, we scale this down to fit...
+        // XXX the 0.5 doesn't seem to actually mean anything, and I dont' remember why I added it
         let node = Node.get (this.node);
         node.transform = Float4x4.translate (Float3.scale (solarSystem.L1, 0.5));
     }}, "DSCOVR");

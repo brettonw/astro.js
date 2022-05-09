@@ -164,11 +164,17 @@ let updateSolarSystem = function (time) {
 
     // L1
     {
+        // IMAP is tracking the L1 point
+
         // DSCOVR is tracking the L1 point, and seems to be oriented with the geocentric coordinate
         // frame (or the ecliptic, I'm not sure). This is an approximation of that position, at 0.01
         // astronomical units. The actual satellite has a Lissajous orbit around the Earth/Sun line,
         // varying approximately +/- 10 degrees over a 6 month period. I'm unable to find a detailed
         // summary of how to compute the position of the satellite, so I'm just going with L1
+
+        // XXX r is a pretty good approximation at 0.01, but this could be calculated to higher
+        // precision if we need to, it's interesting that the number is pretty close to the earth
+        // radius over the sun radius, but it's just dumb luck
         let r = 0.01;
         solarSystem.L1 = Float3.scale (solarSystem.sunDirection, (r * solarSystem.sunR * earthOrbit) / earthRadius);
     }
